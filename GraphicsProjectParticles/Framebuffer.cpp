@@ -16,14 +16,14 @@ bool Framebuffer::init() {
 	assert( numTextures <= _MAX_COLOUR_ATTACH );
 	// Get the buffer id.
 	glGenFramebuffers( 1, &buffer_id_ );
-	glBindFramebuffer( GL_FRAMEBUFFER, buffer_id_ );
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, buffer_id_ );
 	// Generate the textures.
 	for (unsigned int i = 0; i < numTextures; ++i) {
 		GLuint tex;
 		glGenTextures( 1, &tex );
 		glBindTexture(GL_TEXTURE_2D, tex);
 		// Give empty image to OpenGL.
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
 		// Use GL_NEAREST, since we don't want any kind of averaging across values:
 		// we just want one pixel to represent a particle's data.
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -38,16 +38,16 @@ bool Framebuffer::init() {
 	GLenum drawBuffers[ _MAX_COLOUR_ATTACH ];
 	for (unsigned int i = 0; i < numTextures; ++i) {
 		GLenum attach = GL_COLOR_ATTACHMENT0 + i;
-		glFramebufferTexture(GL_FRAMEBUFFER, attach, textures_[i], 0);
+		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, attach, textures_[i], 0);
 		drawBuffers[i] = attach;
 	}
 	glDrawBuffers( numTextures, drawBuffers );
 
-	if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ) {
+	if ( glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ) {
 		std::cerr << "Error: Failed to create framebuffer." << std::endl;
 		return false;
 	}
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
 	return true;
 }
 

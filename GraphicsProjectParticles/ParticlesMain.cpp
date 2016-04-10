@@ -156,6 +156,7 @@ int main (int argc, char* args[]) {
 			glDisableVertexAttribArray(0);
 			basicShader->stopUsing();
 			*/
+	
 			graphics.present();
 		}
 	}

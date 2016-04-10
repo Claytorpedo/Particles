@@ -12,6 +12,30 @@
 
 using namespace constants;
 
+namespace {
+	void printFramebufferInfo(GLenum target, GLuint fbo) {
+
+		glBindFramebuffer(target,fbo);
+
+		int res;
+
+		GLint buffer;
+		int i = 0;
+		do {
+			glGetIntegerv(GL_DRAW_BUFFER0+i, &buffer);
+			if (buffer != GL_NONE) {
+				printf("Shader Output Location %d - color attachment %d\n", i, buffer - GL_COLOR_ATTACHMENT0);
+
+				glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &res);
+				printf("\tAttachment Type: %s\n", res==GL_TEXTURE?"Texture":"Render Buffer");
+				glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &res);
+				printf("\tAttachment object name: %d\n",res);
+			}
+			++i;
+		} while (buffer != GL_NONE);
+	}
+}
+
 AmbientParticleSystem::AmbientParticleSystem(unsigned int dimen) :
 	particle_texture_width_(units::getPowerOf2(dimen)), particle_texture_height_(units::getPowerOf2(dimen)),
 	uv_(0), full_size_quad_(0), is_paused_(false),
@@ -149,7 +173,7 @@ bool AmbientParticleSystem::init() {
 	return true;
 }
 void AmbientParticleSystem::initParticleDrawing() {
-	glBindFramebuffer( GL_FRAMEBUFFER, framebuffers_[0]->getBufferID() );
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, framebuffers_[0]->getBufferID() );
 	// Store the previous viewport.
 	GLint prevViewport[4];
 	glGetIntegerv( GL_VIEWPORT, prevViewport );
@@ -181,7 +205,7 @@ void AmbientParticleSystem::initParticleDrawing() {
 	std::cout << "pixel10000: " << pixels[40000] << "  " << pixels[40001] << "  " << pixels[40002] << "  " << pixels[40003] << std::endl;
 
 	delete pixels;
-
+	printFramebufferInfo( GL_FRAMEBUFFER, framebuffers_[0]->getBufferID());
 
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glDisableVertexAttribArray( attrib );
