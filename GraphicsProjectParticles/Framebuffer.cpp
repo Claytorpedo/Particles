@@ -14,9 +14,6 @@ Framebuffer::~Framebuffer() {
 
 bool Framebuffer::init() {
 	assert( numTextures <= _MAX_COLOUR_ATTACH );
-	// Get the buffer id.
-	glGenFramebuffers( 1, &buffer_id_ );
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, buffer_id_ );
 	// Generate the textures.
 	for (unsigned int i = 0; i < numTextures; ++i) {
 		GLuint tex;
@@ -34,6 +31,11 @@ bool Framebuffer::init() {
 		textures_.push_back(tex);
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Create the FBO.
+	glGenFramebuffers( 1, &buffer_id_ );
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, buffer_id_ );
+
 	// Bind our textures to the framebuffer.
 	GLenum drawBuffers[ _MAX_COLOUR_ATTACH ];
 	for (unsigned int i = 0; i < numTextures; ++i) {

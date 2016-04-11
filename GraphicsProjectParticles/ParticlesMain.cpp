@@ -16,11 +16,13 @@
 
 using namespace constants;
 
-ShaderProgram* basicShader = NULL;
+ShaderProgram* initShader = NULL;
+ShaderProgram* drawShader = NULL;
+ShaderProgram* updateShader = NULL;
 AmbientParticleSystem* particleSystem = NULL;
 
 void close () {
-	delete basicShader;
+	delete initShader;
 	delete particleSystem;
 	SDL_Quit();
 }
@@ -58,6 +60,42 @@ void processInput(Input *input, Graphics *graphics) {
 	}
 
 }
+void printFramebufferInfo(GLenum target, GLuint fbo) {
+
+	glBindFramebuffer(target,fbo);
+
+	int res;
+
+	GLint buffer;
+	int i = 0;
+	do {
+		glGetIntegerv(GL_DRAW_BUFFER0+i, &buffer);
+		if (buffer != GL_NONE) {
+			printf("Shader Output Location %d - color attachment %d\n", i, buffer - GL_COLOR_ATTACHMENT0);
+
+			glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &res);
+			printf("\tAttachment Type: %s\n", res==GL_TEXTURE?"Texture":"Render Buffer");
+			glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &res);
+			printf("\tAttachment object name: %d\n",res);
+		}
+		++i;
+	} while (buffer != GL_NONE);
+}
+
+void genTex( GLuint &tex, unsigned int w, unsigned int h) {
+	glGenTextures( 1, &tex );
+	glBindTexture(GL_TEXTURE_2D, tex);
+	// Give empty image to OpenGL.
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
+	// Use GL_NEAREST, since we don't want any kind of averaging across values:
+	// we just want one pixel to represent a particle's data.
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	// This probably isn't necessary, but we don't want to have UV coords past the image edges.
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
 
 int main (int argc, char* args[]) {
 	bool quit = false;
@@ -71,6 +109,317 @@ int main (int argc, char* args[]) {
 		close();
 		return 1;
 	}
+	initShader = new ShaderProgram(AMB_PART_INIT_VERT_PATH, AMB_PART_INIT_FRAG_PATH);
+	initShader->load();
+	drawShader = new ShaderProgram(AMB_PART_DRAW_VERT_PATH, AMB_PART_DRAW_FRAG_PATH);
+	drawShader->load();
+	updateShader = new ShaderProgram(AMB_PART_UPDATE_VERT_PATH, AMB_PART_UPDATE_FRAG_PATH);
+	updateShader->load();
+
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////// CREATE FRAMEBUFFER OBJECTS /////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+	unsigned int width = units::getPowerOf2(constants::DEFAULT_PARTICLE_EXPONENT);
+	unsigned int height = units::getPowerOf2(constants::DEFAULT_PARTICLE_EXPONENT);
+
+	GLuint texPos;
+	genTex( texPos, width, height);
+	GLuint texVel;
+	genTex( texVel, width, height);
+	
+	GLuint fbo;
+	glGenFramebuffers( 1, &fbo );
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo );
+
+	// Bind our textures to the framebuffer.
+	GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texPos, 0);
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, texVel, 0);
+	glDrawBuffers( 2, drawBuffers );
+
+	if ( glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ) {
+		std::cerr << "Error: Failed to create framebuffer." << std::endl;
+		return false;
+	}
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0);
+
+	
+	GLuint texPos2;
+	genTex(texPos2, width, height);
+	GLuint texVel2;
+	genTex(texVel2, width, height);
+
+	GLuint fbo2;
+	glGenFramebuffers( 1, &fbo2 );
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo2 );
+
+	// Bind our textures to the framebuffer.
+	GLenum drawBuffers2[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texPos2, 0);
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, texVel2, 0);
+	glDrawBuffers( 2, drawBuffers2 );
+
+	if ( glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ) {
+		std::cerr << "Error: Failed to create framebuffer." << std::endl;
+		return false;
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////// CREATE VERTEX BUFFERS //////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// Create quad for textures to draw onto.
+	static const GLfloat quad_array[] = {
+		-1.0f,	-1.0f,  0.0f,	
+		 1.0f,	 1.0f,  0.0f,
+		-1.0f,	 1.0f,  0.0f,
+		-1.0f,	-1.0f,  0.0f,
+		 1.0f,	-1.0f,  0.0f,
+		 1.0f,	 1.0f,  0.0f,
+	};
+	// Get the vertex and buffer array ids.
+	GLuint quadArray;
+	glGenVertexArrays( 1, &quadArray );
+	glBindVertexArray( quadArray );
+	GLuint quadBuf;
+	glGenBuffers(1, &quadBuf);
+	glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
+	glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(GLfloat), quad_array, GL_STATIC_DRAW);
+
+	unsigned int count = width * height * 2;
+	std::vector<GLfloat> uv_data;
+	uv_data.reserve(count);
+	// We do a lot of these, so compute the divisions once for faster multiplication operations in the loop.
+	const float heightRecip = 1.0f/height;
+	const float widthRecip = 1.0f/width;
+	for (unsigned int y = 0; y < height; ++y) {
+		for (unsigned int x = 0; x < width; ++x) {
+			uv_data.push_back((GLfloat)(x) * widthRecip);
+			uv_data.push_back((GLfloat)(y) * heightRecip);
+		}
+	}
+	GLuint uvArray;
+	glGenVertexArrays( 1, &uvArray );
+	glBindVertexArray( uvArray );
+	GLuint uvBuff;
+	glGenBuffers(1, &uvBuff);
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuff);
+	glBufferData(GL_ARRAY_BUFFER, count * sizeof(GLfloat), uv_data.data(), GL_STATIC_DRAW);
+
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////// GET UNIFORM AND ATTRIBUTE IDS //////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	glEnable( GL_PROGRAM_POINT_SIZE );
+
+	GLint inVertexPos = glGetAttribLocation( initShader->getProgramID(), "inVertexPos" );
+	GLint res = glGetUniformLocation( initShader->getProgramID(), "uResolution" );
+
+	GLint inUV = glGetAttribLocation( drawShader->getProgramID(), "inUV" );
+	GLint uPointSize = glGetUniformLocation( drawShader->getProgramID(), "uPointSize" );
+	GLint uPVM = glGetUniformLocation( drawShader->getProgramID(), "uPVM" );
+	GLint uColour = glGetUniformLocation( drawShader->getProgramID(), "uColour" );
+	GLint uTexPos = glGetUniformLocation( drawShader->getProgramID(), "uTexPos" );
+
+	GLint inUpdateVertexPos = glGetAttribLocation( updateShader->getProgramID(), "inVertexPos" );
+	GLint uUpdateResolution = glGetUniformLocation( updateShader->getProgramID(), "uResolution" );
+	GLint uUpdateDeltaT = glGetUniformLocation( updateShader->getProgramID(), "uDeltaT" );
+	GLint uUpdateInputPos = glGetUniformLocation( updateShader->getProgramID(), "uInputPos" );
+	GLint uUpdateKForce = glGetUniformLocation( updateShader->getProgramID(), "uKForce" );
+	GLint uUpdateTexPos = glGetUniformLocation( updateShader->getProgramID(), "uTexPos" );
+	GLint uUpdateTexVel = glGetUniformLocation( updateShader->getProgramID(), "uTexVel" );
+	GLint uUpdateTexOther = glGetUniformLocation( updateShader->getProgramID(), "uTexOther" );
+
+	// Get view projection.
+	glm::mat4 projection = glm::perspective(glm::radians(FOV), ASPECT, NEAR, FAR);
+	glm::mat4 view = glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0)); // Move back 3, look at origin, and y is up.
+	glm::mat4 model = glm::mat4(1.0f); // Just put the triangle at origin.
+	glm::mat4 PVM = projection * view * model;
+
+	glm::vec3 gravPos( -2, 0, 0 );
+
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////// INITIALIZE PARTICLE POSITIONS //////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo);
+	// Store the previous viewport.
+	GLint prevViewport[4];
+	glGetIntegerv( GL_VIEWPORT, prevViewport );
+	glViewport( 0, 0, width, height );
+	glClear( GL_COLOR_BUFFER_BIT );
+	glDisable( GL_DEPTH_TEST );
+	glBlendFunc( GL_ONE, GL_ZERO);
+	graphics.clear();
+	initShader->use();
+	glUniform2f( res, width, height );
+	glEnableVertexAttribArray( inVertexPos );
+	glBindBuffer( GL_ARRAY_BUFFER, quadBuf );
+	glVertexAttribPointer( inVertexPos, 3,
+		GL_FLOAT,	// type
+		GL_FALSE,	// normalized?
+		0,			// stride
+		(void*)0 );	// Array buffer offset
+	glDrawArrays( GL_TRIANGLES, 0, 6 );
+	
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glDisableVertexAttribArray( inVertexPos );
+	initShader->stopUsing();
+	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	// Return the viewport to its previous state.
+	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
+
+	previousTime = SDL_GetTicks();
+	bool first = true;
+	while (!quit) {
+		if ( getInput(&input) ) {
+			break;
+		}
+		processInput(&input, &graphics);
+
+		graphics.clear();
+		if (first) {
+			first = false;
+			glBindFramebuffer( GL_FRAMEBUFFER, fbo);
+			GLfloat *pixels = new GLfloat[width * height * 4];
+			glReadPixels( 0, 0, width, height , GL_RGBA, GL_FLOAT, pixels);
+
+			std::cout << "some pixel entries:\n";
+			std::cout << "pixel0:     " << pixels[0] << "  " << pixels[1] << "  " << pixels[2] << "  " << pixels[3] << std::endl;
+			std::cout << "pixel10:    " << pixels[40] << "  " << pixels[41] << "  " << pixels[42] << "  " << pixels[43] << std::endl;
+			std::cout << "pixel100:   " << pixels[400] << "  " << pixels[401] << "  " << pixels[402] << "  " << pixels[403] << std::endl;
+			//std::cout << "pixel10000: " << pixels[40000] << "  " << pixels[40001] << "  " << pixels[40002] << "  " << pixels[40003] << std::endl;
+			//std::cout << "pixel100000:" << pixels[400000] << "  " << pixels[400001] << "  " << pixels[400002] << "  " << pixels[400003] << std::endl;
+
+			GLfloat *pixels2 = new GLfloat[width * height * 4];
+			glReadBuffer( GL_COLOR_ATTACHMENT1 );
+			glReadPixels( 0, 0, width, height , GL_RGBA, GL_FLOAT, pixels2);
+
+			std::cout << "some pixel entries:\n";
+			std::cout << "pixel0:     " << pixels2[0] << "  " << pixels2[1] << "  " << pixels2[2] << "  " << pixels2[3] << std::endl;
+			std::cout << "pixel10:    " << pixels2[40] << "  " << pixels2[41] << "  " << pixels2[42] << "  " << pixels2[43] << std::endl;
+			std::cout << "pixel100:   " << pixels2[400] << "  " << pixels2[401] << "  " << pixels2[402] << "  " << pixels2[403] << std::endl;
+			//std::cout << "pixel10000: " << pixels2[40000] << "  " << pixels2[40001] << "  " << pixels2[40002] << "  " << pixels2[40003] << std::endl;
+			//std::cout << "pixel100000:" << pixels2[400000] << "  " << pixels2[400001] << "  " << pixels2[400002] << "  " << pixels2[400003] << std::endl;
+
+			delete pixels2;
+			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		}
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		///////////////////// UPDATE PARTICLE POSITIONS //////////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		currentTime = SDL_GetTicks();
+		elapsedTime = currentTime - previousTime;
+		float elapsedTimeSecs = units::millisToSeconds(elapsedTime);
+		
+		updateShader->use();
+		// Bind the framebuffer that wasn't updated last time (or initialized from).
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo2 );
+		// Bind our uniform/variable handles to the update shader (resolution is already bound).
+		glUniform2f( uUpdateResolution, width, height );
+		glUniform1f( uUpdateDeltaT, elapsedTimeSecs > 0.2f ? 0.2f : elapsedTimeSecs );
+		glUniform1f( uUpdateKForce, 10.0f);
+		glUniform3f( uUpdateInputPos, 0.5f, 10.5f, 0.0f );
+
+		// Store the previous viewport.
+		glGetIntegerv( GL_VIEWPORT, prevViewport );
+		glViewport( 0, 0, width, height );
+		glClear( GL_COLOR_BUFFER_BIT );
+		glDisable( GL_DEPTH_TEST ); // Draw everything flat.
+		glBlendFunc( GL_ONE, GL_ZERO );
+
+		// Bind our textures.
+		glActiveTexture( GL_TEXTURE0 );
+		glBindTexture( GL_TEXTURE_2D, texPos );
+		glUniform1i( uUpdateTexPos, 0 );
+		glActiveTexture( GL_TEXTURE1 );
+		glBindTexture( GL_TEXTURE_2D, texVel );
+		glUniform1i( uUpdateTexVel, 1 );
+
+		glEnableVertexAttribArray( inUpdateVertexPos );
+		glBindBuffer( GL_ARRAY_BUFFER, quadBuf );
+		glVertexAttribPointer( inUpdateVertexPos, 3,
+			GL_FLOAT,	// type
+			GL_FALSE,	// normalized?
+			0,			// stride
+			(void*)0 );	// Array buffer offset
+
+		glDrawArrays( GL_TRIANGLES, 0, 6);
+
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		glDisableVertexAttribArray( inUpdateVertexPos );
+		// Return the viewport to its previous state.
+		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
+		// Swap buffers.
+		GLint temp = fbo;
+		fbo = fbo2;
+		fbo2 = temp;
+		temp = texPos;
+		GLint temp2 = texVel;
+		texPos = texPos2;
+		texVel = texPos2;
+		texPos2 = temp;
+		texVel2 = temp2;
+
+		glBindTexture( GL_TEXTURE_2D, 0);
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+		
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		///////////////////// DRAW PARTICLES /////////////////////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		
+		graphics.clear();
+
+		//glEnable( GL_DEPTH_TEST );
+
+		drawShader->use();
+		// Enable additive blending, so overlapping particles appear brighter.
+		glBlendFunc( GL_ONE , GL_ONE );
+
+		glUniformMatrix4fv(uPVM, 1, GL_FALSE, &PVM[0][0] );
+		glUniform4f(uColour, 0.4f, 0.1f, 0.4f, 0.6f);
+		glUniform1f(uPointSize, 4.0f);
+		
+		glActiveTexture( GL_TEXTURE0 );
+		glBindTexture( GL_TEXTURE_2D, texPos );
+		glUniform1i( uTexPos, 0 );
+
+		glEnableVertexAttribArray( inUV );
+		glBindBuffer( GL_ARRAY_BUFFER, uvBuff );
+		glVertexAttribPointer( inUV, 2,
+			GL_FLOAT,	// type
+			GL_FALSE,	// normalized?
+			0,			// stride
+			(void*)0 );	// Array buffer offset
+
+		glDrawArrays( GL_POINTS, 0, width*height );
+
+		glBindTexture( GL_TEXTURE_2D, 0 );
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		glDisableVertexAttribArray( inUV );
+		drawShader->stopUsing();
+		
+		graphics.present();
+		previousTime = currentTime;
+	}
+
+
+	close();
+	return 0;
+}
+	/*
 	basicShader = new ShaderProgram(BASIC_SHADER_VERT_PATH, BASIC_SHADER_FRAG_PATH);
 	if ( !basicShader->load() ) {
 		std::cerr << "Error: failed to create shaders!" << std::endl;
@@ -137,7 +486,7 @@ int main (int argc, char* args[]) {
 			//particleSystem->drawTexture( 0 );
 
 
-			/*
+			
 			basicShader->use();
 			// Then for each object we draw, send it the adress of that mat4 under that handle.
 			// This sends it to the currently bound shader.
@@ -155,7 +504,7 @@ int main (int argc, char* args[]) {
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glDisableVertexAttribArray(0);
 			basicShader->stopUsing();
-			*/
+			
 	
 			graphics.present();
 		}
@@ -163,7 +512,7 @@ int main (int argc, char* args[]) {
 	close();
 	return 0;
 }
-
+*/
 /*
 	Ideas: Make my bajillion particles
 			Make it so that they gravitate towards a 3D mouse position
