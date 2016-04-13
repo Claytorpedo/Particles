@@ -14,9 +14,9 @@ class Framebuffer;
 class AmbientParticleSystem {
 private:
 	bool is_paused_;
-	const unsigned int particle_texture_width_, particle_texture_height_;
+	unsigned int particle_texture_width_, particle_texture_height_;
 	VertexBuffer *uv_, *full_size_quad_;
-	ShaderProgram *init_shader_, *update_shader_, *draw_shader_, *draw_texture_shader_;
+	ShaderProgram *init_shader_, *update_shader_, *draw_shader_;
 	Framebuffer *framebuffers_[2]; // Two frame buffers to swap between.
 
 	struct IDPair {
@@ -46,7 +46,6 @@ public:
 	bool init();
 	void update(units::MS elapsedTime, glm::vec3 gravityPos );
 	void draw( glm::mat4 PVM );
-	void drawTexture(unsigned int texNum);
 };
 
 

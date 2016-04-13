@@ -8,8 +8,8 @@
 #include <cassert>
 
 Framebuffer::~Framebuffer() {
-	if (!textures_.empty()) glDeleteTextures( textures_.size(), textures_.data() );
-	if (fbo_) glDeleteFramebuffers( 1, &fbo_ );
+	if ( !textures_.empty() )	{ glDeleteTextures( textures_.size(), textures_.data() ); }
+	if ( fbo_ )					{ glDeleteFramebuffers( 1, &fbo_ ); }
 }
 
 bool Framebuffer::init() {
@@ -99,4 +99,26 @@ void Framebuffer::genTexture(GLuint &tex) {
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+void Framebuffer::printInfo() {
+	glBindFramebuffer( GL_FRAMEBUFFER, fbo_ );
+
+	int res;
+	GLint buffer;
+	int i = 0;
+	do {
+		glGetIntegerv(GL_DRAW_BUFFER0+i, &buffer);
+		if (buffer != GL_NONE) {
+			printf("Shader Output Location %d - color attachment %d\n", i, buffer - GL_COLOR_ATTACHMENT0);
+
+			glGetFramebufferAttachmentParameteriv(
+				GL_FRAMEBUFFER, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &res);
+			printf("\tAttachment Type: %s\n", res==GL_TEXTURE?"Texture":"Render Buffer");
+			glGetFramebufferAttachmentParameteriv(
+				GL_FRAMEBUFFER, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &res);
+			printf("\tAttachment object name: %d\n",res);
+		}
+		++i;
+	} while (buffer != GL_NONE);
+	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 }

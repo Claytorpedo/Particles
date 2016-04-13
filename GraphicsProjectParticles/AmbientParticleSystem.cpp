@@ -12,28 +12,12 @@
 
 using namespace constants;
 
+#define NUM_TEXTURES_PER_FRAMEBUFFER 3
+
 namespace {
-	void printFramebufferInfo(GLenum target, GLuint fbo) {
 
-		glBindFramebuffer(target,fbo);
 
-		int res;
 
-		GLint buffer;
-		int i = 0;
-		do {
-			glGetIntegerv(GL_DRAW_BUFFER0+i, &buffer);
-			if (buffer != GL_NONE) {
-				printf("Shader Output Location %d - color attachment %d\n", i, buffer - GL_COLOR_ATTACHMENT0);
-
-				glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &res);
-				printf("\tAttachment Type: %s\n", res==GL_TEXTURE?"Texture":"Render Buffer");
-				glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &res);
-				printf("\tAttachment object name: %d\n",res);
-			}
-			++i;
-		} while (buffer != GL_NONE);
-	}
 }
 
 AmbientParticleSystem::AmbientParticleSystem(unsigned int dimen) :
@@ -83,12 +67,6 @@ bool AmbientParticleSystem::initShaders() {
 	draw_shader_ = new ShaderProgram(AMB_PART_DRAW_VERT_PATH, AMB_PART_DRAW_FRAG_PATH);
 	if ( !draw_shader_->load() ) {
 		std::cerr << "Failed to load particle drawing shader." << std::endl;
-		return false;
-	}
-	// For debugging (to view the textures in the buffers).
-	draw_texture_shader_ = new ShaderProgram(TEXTURE_SHADER_VERT_PATH, TEXTURE_SHADER_FRAG_PATH);
-	if ( !draw_texture_shader_->load() ) {
-		std::cerr << "Failed to load texture drawing shader." << std::endl;
 		return false;
 	}
 	return true;
@@ -146,6 +124,10 @@ bool AmbientParticleSystem::init() {
 		std::cerr << "Error: failed to initialize shaders." << std::endl;
 		return false;
 	}
+	if ( !initFramebuffers() ) {
+		std::cerr << "Error: failed to create framebuffers." << std::endl;
+		return false;
+	}
 	// Get handles for variables and uniforms in these shader programs.
 	getShaderVariableIDs(init_shader_->getProgramID(), init_variable_ids_, constants::init::VARIABLE_NAMES);
 	getShaderVariableIDs(update_shader_->getProgramID(), update_variable_ids_, constants::update::VARIABLE_NAMES);
@@ -157,10 +139,6 @@ bool AmbientParticleSystem::init() {
 
 	initVertexBuffers();
 
-	if ( !initFramebuffers() ) {
-		std::cerr << "Error: failed to create framebuffers." << std::endl;
-		return false;
-	}
 	// Set resolution uniforms for the init and update shader programs.
 	init_shader_->use();
 	glUniform2f( init_uniform_ids_[constants::init::Uniforms::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
@@ -205,7 +183,6 @@ void AmbientParticleSystem::initParticleDrawing() {
 	std::cout << "pixel10000: " << pixels[40000] << "  " << pixels[40001] << "  " << pixels[40002] << "  " << pixels[40003] << std::endl;
 
 	delete pixels;
-	printFramebufferInfo( GL_FRAMEBUFFER, framebuffers_[0]->getBufferID());
 
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glDisableVertexAttribArray( attrib );
@@ -299,26 +276,4 @@ void AmbientParticleSystem::draw( glm::mat4 PVM ) {
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glDisableVertexAttribArray( attrib );
 	draw_shader_->stopUsing();
-}
-
-void AmbientParticleSystem::drawTexture(unsigned int texNum) {
-	glClear( GL_COLOR_BUFFER_BIT );
-	GLuint tex = glGetUniformLocation( draw_texture_shader_->getProgramID(), "uTexture" );
-	draw_texture_shader_->use();
-
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, framebuffers_[0]->getTexture( texNum ) );
-	glUniform1i( tex, 0 );
-	glEnableVertexAttribArray( 0 );
-	glBindBuffer( GL_ARRAY_BUFFER, full_size_quad_->getBufferID() );
-	glVertexAttribPointer( 0, full_size_quad_->vertexSize,
-				GL_FLOAT,	// type
-				GL_FALSE,	// normalized?
-				0,			// stride
-				(void*)0 );	// Array buffer offset
-	glDrawArrays( GL_TRIANGLES, 0, full_size_quad_->numVertices );
-
-	glBindTexture( GL_TEXTURE_2D, 0 );
-	glDisableVertexAttribArray( 0 );
-	draw_texture_shader_->stopUsing();
 }

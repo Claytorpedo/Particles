@@ -73,8 +73,6 @@ namespace constants {
 		const std::vector<std::string> VARIABLE_NAMES(h::draw_vars_char, std::end(h::draw_vars_char));
 		const std::vector<std::string> UNIFORM_NAMES(h::draw_unis_char, std::end(h::draw_unis_char));
 	}
-
-	const unsigned int NUM_TEXTURES_PER_FRAMEBUFFER = 3;
 }
 
 #endif // _CONSTANTS_H_

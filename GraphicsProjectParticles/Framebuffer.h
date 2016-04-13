@@ -33,6 +33,7 @@ public:
 	void stopDrawingTo();
 	void readFrom();
 	void stopReading();
+	void printInfo();
 };
 
 

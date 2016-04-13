@@ -21,7 +21,7 @@
 
 
 #include "Framebuffer.h"
-
+#include "VertexBuffer.h"
 
 
 
@@ -34,6 +34,8 @@ AmbientParticleSystem* particleSystem = NULL;
 
 Framebuffer *framebuffer1;
 Framebuffer *framebuffer2;
+VertexBuffer *quadBuffer;
+VertexBuffer *uvBuffer;
 
 bool debug = false;
 
@@ -75,42 +77,6 @@ void processInput(Input *input, Graphics *graphics) {
 		graphics->setClearColour(0,0,0,1);
 	}
 
-}
-void printFramebufferInfo(GLenum target, GLuint fbo) {
-
-	glBindFramebuffer(target,fbo);
-
-	int res;
-
-	GLint buffer;
-	int i = 0;
-	do {
-		glGetIntegerv(GL_DRAW_BUFFER0+i, &buffer);
-		if (buffer != GL_NONE) {
-			printf("Shader Output Location %d - color attachment %d\n", i, buffer - GL_COLOR_ATTACHMENT0);
-
-			glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &res);
-			printf("\tAttachment Type: %s\n", res==GL_TEXTURE?"Texture":"Render Buffer");
-			glGetFramebufferAttachmentParameteriv(target, buffer, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &res);
-			printf("\tAttachment object name: %d\n",res);
-		}
-		++i;
-	} while (buffer != GL_NONE);
-}
-
-void genTex( GLuint &tex, unsigned int w, unsigned int h) {
-	glGenTextures( 1, &tex );
-	glBindTexture(GL_TEXTURE_2D, tex);
-	// Give empty image to OpenGL.
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
-	// Use GL_NEAREST, since we don't want any kind of averaging across values:
-	// we just want one pixel to represent a particle's data.
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	// This probably isn't necessary, but we don't want to have UV coords past the image edges.
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 int main (int argc, char* args[]) {
@@ -159,18 +125,11 @@ int main (int argc, char* args[]) {
 		 1.0f,	-1.0f,  0.0f,
 		 1.0f,	 1.0f,  0.0f,
 	};
-	// Get the vertex and buffer array ids.
-	GLuint quadArray;
-	glGenVertexArrays( 1, &quadArray );
-	glBindVertexArray( quadArray );
-	GLuint quadBuf;
-	glGenBuffers(1, &quadBuf);
-	glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
-	glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(GLfloat), quad_array, GL_STATIC_DRAW);
+	quadBuffer = new VertexBuffer( 3, 6, &quad_array[0] );
 
-	unsigned int count = width * height * 2;
+	unsigned int count = width * height;
 	std::vector<GLfloat> uv_data;
-	uv_data.reserve(count);
+	uv_data.reserve(count * 2);
 	// We do a lot of these, so compute the divisions once for faster multiplication operations in the loop.
 	const float heightRecip = 1.0f/height;
 	const float widthRecip = 1.0f/width;
@@ -180,15 +139,9 @@ int main (int argc, char* args[]) {
 			uv_data.push_back((GLfloat)(y) * heightRecip);
 		}
 	}
-	GLuint uvArray;
-	glGenVertexArrays( 1, &uvArray );
-	glBindVertexArray( uvArray );
-	GLuint uvBuff;
-	glGenBuffers(1, &uvBuff);
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuff);
-	glBufferData(GL_ARRAY_BUFFER, count * sizeof(GLfloat), uv_data.data(), GL_STATIC_DRAW);
-
-
+	uvBuffer = new VertexBuffer( 2, count, uv_data );
+	uv_data.clear();
+	
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////// GET UNIFORM AND ATTRIBUTE IDS //////////////////////////////////////////////////////////////////////////////////////
@@ -216,8 +169,8 @@ int main (int argc, char* args[]) {
 
 	// Get view projection.
 	glm::mat4 projection = glm::perspective(glm::radians(FOV), ASPECT, NEAR, FAR);
-	glm::mat4 view = glm::lookAt(glm::vec3(0,0,10), glm::vec3(0,-1,0), glm::vec3(0,1,0)); // Move back 3, look at origin, and y is up.
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, -5.0f, 0.0f));
+	glm::mat4 view = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0,-1,0), glm::vec3(0,1,0)); // Move back 3, look at origin, and y is up.
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, -2.5f, 0.0f));
 	glm::mat4 PVM = projection * view * model;
 
 	glm::vec3 gravPos( -2, 0, 0 );
@@ -237,8 +190,9 @@ int main (int argc, char* args[]) {
 	graphics.clear();
 	initShader->use();
 	glUniform2f( res, width, height );
+
+	quadBuffer->bind();
 	glEnableVertexAttribArray( inVertexPos );
-	glBindBuffer( GL_ARRAY_BUFFER, quadBuf );
 	glVertexAttribPointer( inVertexPos, 3,
 		GL_FLOAT,	// type
 		GL_FALSE,	// normalized?
@@ -246,7 +200,7 @@ int main (int argc, char* args[]) {
 		(void*)0 );	// Array buffer offset
 	glDrawArrays( GL_TRIANGLES, 0, 6 );
 	
-	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	quadBuffer->unbind();
 	glDisableVertexAttribArray( inVertexPos );
 	initShader->stopUsing();
 	framebuffer1->stopDrawingTo();
@@ -306,8 +260,8 @@ int main (int argc, char* args[]) {
 		uniformTextureUpdateLocations[1] = uUpdateTexVel;
 		framebuffer1->bindTextures( uniformTextureUpdateLocations );
 
+		quadBuffer->bind();
 		glEnableVertexAttribArray( inUpdateVertexPos );
-		glBindBuffer( GL_ARRAY_BUFFER, quadBuf );
 		glVertexAttribPointer( inUpdateVertexPos, 3,
 			GL_FLOAT,	// type
 			GL_FALSE,	// normalized?
@@ -316,7 +270,7 @@ int main (int argc, char* args[]) {
 
 		glDrawArrays( GL_TRIANGLES, 0, 6);
 
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		quadBuffer->unbind();
 		glDisableVertexAttribArray( inUpdateVertexPos );
 		// Return the viewport to its previous state.
 		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
@@ -348,9 +302,8 @@ int main (int argc, char* args[]) {
 		uniformTextureDrawLocations[0] = uTexPos;
 		framebuffer1->bindTextures( uniformTextureDrawLocations );
 
-
+		uvBuffer->bind();
 		glEnableVertexAttribArray( inUV );
-		glBindBuffer( GL_ARRAY_BUFFER, uvBuff );
 		glVertexAttribPointer( inUV, 2,
 			GL_FLOAT,	// type
 			GL_FALSE,	// normalized?
@@ -360,7 +313,7 @@ int main (int argc, char* args[]) {
 		glDrawArrays( GL_POINTS, 0, width*height );
 
 		framebuffer1->unbindTextures();
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		uvBuffer->unbind();
 		glDisableVertexAttribArray( inUV );
 		drawShader->stopUsing();
 		
@@ -371,8 +324,6 @@ int main (int argc, char* args[]) {
 			SDL_Delay( SIXTY_FPS_FRAME_DUR - elapsedTime );
 		}
 	}
-
-
 	close();
 	return 0;
 }
@@ -499,20 +450,6 @@ If a large array or structure is passed, it can incur a large copy operation whi
 It would be a better choice to declare these variables in the global scope.
 
 
-
-// THIS IS HOW YOU SET UP INPUT TO THE VERTEX SHADER
-	// I'll want to set this up as some kind of parameter for this shader builder function
-	 Bind attribute index 0 (coordinates) to in_Position and attribute index 1 (color) to in_Color
-     Attribute locations must be setup before calling glLinkProgram.
-    //glBindAttribLocation(ProgramID, 0, "in_Position");
-    //glBindAttribLocation(ProgramID, 1, "in_Color");
-Then in vert shader
-// in_Position was bound to attribute index 0 and in_Color was bound to attribute index 1
-in  vec2 in_Position;
-in  vec3 in_Color;
-
-
-
 	Create vertices randomly with normal distribution around origin. 
 
 	If things are looking bad, then go take a look at CUDA quick.
@@ -565,7 +502,5 @@ in  vec3 in_Color;
 			vert takes in the textures the compute shader computed.
 					sets the position and can also pass other things along (like if I want to do colour based on velocity)
 			frag just sets the colour.
-				
-		PASS STD::VECTOR to opengl with &my_vector[0] or also &my_vector.front()
-			Then for the size you use my_vector.size() * sizeof(<type of data in vector>)
+
 */
