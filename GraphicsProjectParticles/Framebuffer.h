@@ -4,26 +4,35 @@
 #include <vector>
 #include "GL\glew.h"
 
-static const GLuint _MAX_COLOUR_ATTACH = 32;
+static const GLuint _MAX_COLOUR_ATTACH = 16;
 
 class Framebuffer {
 
 private:
-	GLuint buffer_id_;
+	GLuint fbo_;
 	std::vector<GLuint> textures_;
+	bool is_initialized_;
 
+	void genTexture(GLuint &tex);
 public:
 	const unsigned int width, height, numTextures;
 
 	Framebuffer(unsigned int width, unsigned int height, unsigned int numTextures)
-		: width(width), height(height), numTextures(numTextures), buffer_id_(0) {}
+		: width(width), height(height), numTextures(numTextures), fbo_(0), is_initialized_(false) {}
 	~Framebuffer();
 
 	bool init();
+	bool isInitialized();
 
-	GLuint getBufferID() { return buffer_id_; }
+	GLuint getBufferID() { return fbo_; }
 	std::vector<GLuint> getTextures() { return textures_; }
 	GLuint getTexture(unsigned int num);
+	void bindTextures(std::vector<GLint> uniformTextureLocations);
+	void unbindTextures();
+	void drawTo();
+	void stopDrawingTo();
+	void readFrom();
+	void stopReading();
 };
 
 

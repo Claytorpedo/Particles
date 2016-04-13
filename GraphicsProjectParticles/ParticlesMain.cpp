@@ -12,7 +12,18 @@
 #include "Input.h"
 
 #include "glm\glm.hpp"
+#include "glm\gtx\transform.hpp"
 #include "glm\gtc\matrix_transform.hpp"
+
+
+
+
+
+
+#include "Framebuffer.h"
+
+
+
 
 using namespace constants;
 
@@ -20,6 +31,11 @@ ShaderProgram* initShader = NULL;
 ShaderProgram* drawShader = NULL;
 ShaderProgram* updateShader = NULL;
 AmbientParticleSystem* particleSystem = NULL;
+
+Framebuffer *framebuffer1;
+Framebuffer *framebuffer2;
+
+bool debug = false;
 
 void close () {
 	delete initShader;
@@ -109,6 +125,7 @@ int main (int argc, char* args[]) {
 		close();
 		return 1;
 	}
+
 	initShader = new ShaderProgram(AMB_PART_INIT_VERT_PATH, AMB_PART_INIT_FRAG_PATH);
 	initShader->load();
 	drawShader = new ShaderProgram(AMB_PART_DRAW_VERT_PATH, AMB_PART_DRAW_FRAG_PATH);
@@ -116,63 +133,23 @@ int main (int argc, char* args[]) {
 	updateShader = new ShaderProgram(AMB_PART_UPDATE_VERT_PATH, AMB_PART_UPDATE_FRAG_PATH);
 	updateShader->load();
 
-	
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////// CREATE FRAMEBUFFER OBJECTS /////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
 	unsigned int width = units::getPowerOf2(constants::DEFAULT_PARTICLE_EXPONENT);
 	unsigned int height = units::getPowerOf2(constants::DEFAULT_PARTICLE_EXPONENT);
 
-	GLuint texPos;
-	genTex( texPos, width, height);
-	GLuint texVel;
-	genTex( texVel, width, height);
-	
-	GLuint fbo;
-	glGenFramebuffers( 1, &fbo );
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo );
-
-	// Bind our textures to the framebuffer.
-	GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texPos, 0);
-	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, texVel, 0);
-	glDrawBuffers( 2, drawBuffers );
-
-	if ( glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ) {
-		std::cerr << "Error: Failed to create framebuffer." << std::endl;
-		return false;
+	framebuffer1 = new Framebuffer(width, height, 3);
+	framebuffer2 = new Framebuffer(width, height, 3);
+	if ( !framebuffer1->init() || !framebuffer2->init() ) {
+		std::cerr << "Error: Framebuffers could not be initialized." << std::endl;
+		return 0;
 	}
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0);
-
 	
-	GLuint texPos2;
-	genTex(texPos2, width, height);
-	GLuint texVel2;
-	genTex(texVel2, width, height);
-
-	GLuint fbo2;
-	glGenFramebuffers( 1, &fbo2 );
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo2 );
-
-	// Bind our textures to the framebuffer.
-	GLenum drawBuffers2[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texPos2, 0);
-	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, texVel2, 0);
-	glDrawBuffers( 2, drawBuffers2 );
-
-	if ( glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ) {
-		std::cerr << "Error: Failed to create framebuffer." << std::endl;
-		return false;
-	}
-
-
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////// CREATE VERTEX BUFFERS //////////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	// Create quad for textures to draw onto.
 	static const GLfloat quad_array[] = {
 		-1.0f,	-1.0f,  0.0f,	
@@ -217,7 +194,6 @@ int main (int argc, char* args[]) {
 	///////////////////// GET UNIFORM AND ATTRIBUTE IDS //////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 	glEnable( GL_PROGRAM_POINT_SIZE );
 
 	GLint inVertexPos = glGetAttribLocation( initShader->getProgramID(), "inVertexPos" );
@@ -231,7 +207,7 @@ int main (int argc, char* args[]) {
 
 	GLint inUpdateVertexPos = glGetAttribLocation( updateShader->getProgramID(), "inVertexPos" );
 	GLint uUpdateResolution = glGetUniformLocation( updateShader->getProgramID(), "uResolution" );
-	GLint uUpdateDeltaT = glGetUniformLocation( updateShader->getProgramID(), "uDeltaT" );
+	GLint uUpdateElapsedTime = glGetUniformLocation( updateShader->getProgramID(), "uElapsedTime" );
 	GLint uUpdateInputPos = glGetUniformLocation( updateShader->getProgramID(), "uInputPos" );
 	GLint uUpdateKForce = glGetUniformLocation( updateShader->getProgramID(), "uKForce" );
 	GLint uUpdateTexPos = glGetUniformLocation( updateShader->getProgramID(), "uTexPos" );
@@ -240,20 +216,17 @@ int main (int argc, char* args[]) {
 
 	// Get view projection.
 	glm::mat4 projection = glm::perspective(glm::radians(FOV), ASPECT, NEAR, FAR);
-	glm::mat4 view = glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0)); // Move back 3, look at origin, and y is up.
-	glm::mat4 model = glm::mat4(1.0f); // Just put the triangle at origin.
+	glm::mat4 view = glm::lookAt(glm::vec3(0,0,10), glm::vec3(0,-1,0), glm::vec3(0,1,0)); // Move back 3, look at origin, and y is up.
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, -5.0f, 0.0f));
 	glm::mat4 PVM = projection * view * model;
 
 	glm::vec3 gravPos( -2, 0, 0 );
-
-
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////// INITIALIZE PARTICLE POSITIONS //////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo);
+	framebuffer1->drawTo();
 	// Store the previous viewport.
 	GLint prevViewport[4];
 	glGetIntegerv( GL_VIEWPORT, prevViewport );
@@ -276,61 +249,49 @@ int main (int argc, char* args[]) {
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glDisableVertexAttribArray( inVertexPos );
 	initShader->stopUsing();
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	framebuffer1->stopDrawingTo();
 	// Return the viewport to its previous state.
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
 
 	previousTime = SDL_GetTicks();
-	bool first = true;
 	while (!quit) {
-		if ( getInput(&input) ) {
+		if ( getInput(&input) || input.wasKeyPressed(SDLK_ESCAPE) ) {
 			break;
 		}
 		processInput(&input, &graphics);
 
 		graphics.clear();
-		if (first) {
-			first = false;
-			glBindFramebuffer( GL_FRAMEBUFFER, fbo);
-			GLfloat *pixels = new GLfloat[width * height * 4];
-			glReadPixels( 0, 0, width, height , GL_RGBA, GL_FLOAT, pixels);
 
-			std::cout << "some pixel entries:\n";
-			std::cout << "pixel0:     " << pixels[0] << "  " << pixels[1] << "  " << pixels[2] << "  " << pixels[3] << std::endl;
-			std::cout << "pixel10:    " << pixels[40] << "  " << pixels[41] << "  " << pixels[42] << "  " << pixels[43] << std::endl;
-			std::cout << "pixel100:   " << pixels[400] << "  " << pixels[401] << "  " << pixels[402] << "  " << pixels[403] << std::endl;
-			//std::cout << "pixel10000: " << pixels[40000] << "  " << pixels[40001] << "  " << pixels[40002] << "  " << pixels[40003] << std::endl;
-			//std::cout << "pixel100000:" << pixels[400000] << "  " << pixels[400001] << "  " << pixels[400002] << "  " << pixels[400003] << std::endl;
+		currentTime = SDL_GetTicks();
+		elapsedTime = currentTime - previousTime;
+		previousTime = currentTime;
+		float elapsedTimeSecs = units::millisToSeconds(elapsedTime);
 
-			GLfloat *pixels2 = new GLfloat[width * height * 4];
+		if (debug) {
+			framebuffer1->readFrom();
+			glReadBuffer( GL_COLOR_ATTACHMENT0 );
+			GLfloat *pixels = new GLfloat[ 4];
+			glReadPixels( 0, 1023, 1, 1 , GL_RGBA, GL_FLOAT, pixels);
+			std::cout << "Position:     " << pixels[0] << "  " << pixels[1] << "  " << pixels[2] << "  " << pixels[3] << std::endl;
 			glReadBuffer( GL_COLOR_ATTACHMENT1 );
-			glReadPixels( 0, 0, width, height , GL_RGBA, GL_FLOAT, pixels2);
-
-			std::cout << "some pixel entries:\n";
-			std::cout << "pixel0:     " << pixels2[0] << "  " << pixels2[1] << "  " << pixels2[2] << "  " << pixels2[3] << std::endl;
-			std::cout << "pixel10:    " << pixels2[40] << "  " << pixels2[41] << "  " << pixels2[42] << "  " << pixels2[43] << std::endl;
-			std::cout << "pixel100:   " << pixels2[400] << "  " << pixels2[401] << "  " << pixels2[402] << "  " << pixels2[403] << std::endl;
-			//std::cout << "pixel10000: " << pixels2[40000] << "  " << pixels2[40001] << "  " << pixels2[40002] << "  " << pixels2[40003] << std::endl;
-			//std::cout << "pixel100000:" << pixels2[400000] << "  " << pixels2[400001] << "  " << pixels2[400002] << "  " << pixels2[400003] << std::endl;
-
-			delete pixels2;
-			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+			glReadPixels( 0, 1023, 1, 1, GL_RGBA, GL_FLOAT, pixels);
+			std::cout << "Velocity:     " << pixels[0] << "  " << pixels[1] << "  " << pixels[2] << "  " << pixels[3] << std::endl;
+			delete pixels;
+			framebuffer1->stopReading();
 		}
+		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////// UPDATE PARTICLE POSITIONS //////////////////////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		currentTime = SDL_GetTicks();
-		elapsedTime = currentTime - previousTime;
-		float elapsedTimeSecs = units::millisToSeconds(elapsedTime);
 		
 		updateShader->use();
 		// Bind the framebuffer that wasn't updated last time (or initialized from).
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, fbo2 );
+		framebuffer2->drawTo();
 		// Bind our uniform/variable handles to the update shader (resolution is already bound).
 		glUniform2f( uUpdateResolution, width, height );
-		glUniform1f( uUpdateDeltaT, elapsedTimeSecs > 0.2f ? 0.2f : elapsedTimeSecs );
-		glUniform1f( uUpdateKForce, 10.0f);
-		glUniform3f( uUpdateInputPos, 0.5f, 10.5f, 0.0f );
+		glUniform1f( uUpdateElapsedTime, elapsedTimeSecs );//* 0.5f);//elapsedTimeSecs > 0.2f ? 0.2f : elapsedTimeSecs );
+		glUniform1f( uUpdateKForce, 5.0f);
+		glUniform3f( uUpdateInputPos, 2.0f, 2.0f, 0.0f );
 
 		// Store the previous viewport.
 		glGetIntegerv( GL_VIEWPORT, prevViewport );
@@ -340,12 +301,10 @@ int main (int argc, char* args[]) {
 		glBlendFunc( GL_ONE, GL_ZERO );
 
 		// Bind our textures.
-		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, texPos );
-		glUniform1i( uUpdateTexPos, 0 );
-		glActiveTexture( GL_TEXTURE1 );
-		glBindTexture( GL_TEXTURE_2D, texVel );
-		glUniform1i( uUpdateTexVel, 1 );
+		std::vector<GLint> uniformTextureUpdateLocations(2);
+		uniformTextureUpdateLocations[0] = uUpdateTexPos;
+		uniformTextureUpdateLocations[1] = uUpdateTexVel;
+		framebuffer1->bindTextures( uniformTextureUpdateLocations );
 
 		glEnableVertexAttribArray( inUpdateVertexPos );
 		glBindBuffer( GL_ARRAY_BUFFER, quadBuf );
@@ -361,40 +320,34 @@ int main (int argc, char* args[]) {
 		glDisableVertexAttribArray( inUpdateVertexPos );
 		// Return the viewport to its previous state.
 		glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
-		// Swap buffers.
-		GLint temp = fbo;
-		fbo = fbo2;
-		fbo2 = temp;
-		temp = texPos;
-		GLint temp2 = texVel;
-		texPos = texPos2;
-		texVel = texPos2;
-		texPos2 = temp;
-		texVel2 = temp2;
 
-		glBindTexture( GL_TEXTURE_2D, 0);
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+		framebuffer1->unbindTextures();
+		framebuffer2->stopDrawingTo();
+		// Swap buffers.
+		Framebuffer *temp = framebuffer1;
+		framebuffer1 = framebuffer2;
+		framebuffer2 = temp;
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////// DRAW PARTICLES /////////////////////////////////////////////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		
 		graphics.clear();
 
-		//glEnable( GL_DEPTH_TEST );
+		glEnable( GL_DEPTH_TEST );
 
 		drawShader->use();
 		// Enable additive blending, so overlapping particles appear brighter.
-		glBlendFunc( GL_ONE , GL_ONE );
+		glBlendFunc( GL_SRC_ALPHA , GL_ONE );
 
 		glUniformMatrix4fv(uPVM, 1, GL_FALSE, &PVM[0][0] );
-		glUniform4f(uColour, 0.4f, 0.1f, 0.4f, 0.6f);
-		glUniform1f(uPointSize, 4.0f);
+		glUniform4f(uColour, 0.1f, 0.6f, 0.6f, 0.6f);
+		glUniform1f(uPointSize, 1.0f);
 		
-		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, texPos );
-		glUniform1i( uTexPos, 0 );
+		std::vector<GLint> uniformTextureDrawLocations(1);
+		uniformTextureDrawLocations[0] = uTexPos;
+		framebuffer1->bindTextures( uniformTextureDrawLocations );
+
 
 		glEnableVertexAttribArray( inUV );
 		glBindBuffer( GL_ARRAY_BUFFER, uvBuff );
@@ -406,13 +359,17 @@ int main (int argc, char* args[]) {
 
 		glDrawArrays( GL_POINTS, 0, width*height );
 
-		glBindTexture( GL_TEXTURE_2D, 0 );
+		framebuffer1->unbindTextures();
 		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 		glDisableVertexAttribArray( inUV );
 		drawShader->stopUsing();
 		
 		graphics.present();
-		previousTime = currentTime;
+		
+		// Limit loop to 60hz.
+		if ( elapsedTime < SIXTY_FPS_FRAME_DUR ) {
+			SDL_Delay( SIXTY_FPS_FRAME_DUR - elapsedTime );
+		}
 	}
 
 

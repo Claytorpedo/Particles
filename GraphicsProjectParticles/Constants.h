@@ -25,6 +25,8 @@ namespace constants {
 	const float			NEAR = 0.1f;
 	const float			FAR = 100.0f;
 
+	const MS			SIXTY_FPS_FRAME_DUR = 17;
+
 	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024
 
 	// Shader file paths from the main directory.
