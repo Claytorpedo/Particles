@@ -51,7 +51,6 @@ ShaderProgram::ShaderProgram(const char* vertex_file_path, const char* fragment_
 ShaderProgram::~ShaderProgram() {
 	unload();
 }
-
 GLuint ShaderProgram::getProgramID() const {
 	return shader_program_;
 }

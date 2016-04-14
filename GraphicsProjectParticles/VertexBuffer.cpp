@@ -40,10 +40,3 @@ void VertexBuffer::unbind() {
 	glBindVertexArray( 0 );
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-
-GLuint VertexBuffer::getArrayID() const { 
-	return array_id_; 
-}
-GLuint VertexBuffer::getBufferID() const { 
-	return buffer_id_; 
-}

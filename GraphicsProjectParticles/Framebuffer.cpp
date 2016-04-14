@@ -54,12 +54,12 @@ GLuint Framebuffer::getTexture(unsigned int num) {
 	}
 	return textures_[num]; 
 }
-void Framebuffer::bindTextures(std::vector<GLint> uniformTextureLocations) {
+void Framebuffer::bindTextures(unsigned int num, GLint *uniformTextureLocations) {
 	if ( !is_initialized_ ) {
 		std::cerr << "Warning: Framebuffer is not initialized, call to bindTextures invalid." << std::endl;
 		return;
 	}
-	for ( unsigned int i = 0; i < numTextures && i < uniformTextureLocations.size(); ++i ) {
+	for ( unsigned int i = 0; i < numTextures && i < num; ++i ) {
 		glActiveTexture( GL_TEXTURE0 + i );
 		glBindTexture( GL_TEXTURE_2D, textures_[i] );
 		glUniform1i( uniformTextureLocations[i], i );

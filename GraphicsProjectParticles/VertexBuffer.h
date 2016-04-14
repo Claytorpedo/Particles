@@ -21,10 +21,6 @@ public:
 
 	void bind();
 	void unbind();
-
-	// DELETE THESE
-	GLuint getArrayID() const;
-	GLuint getBufferID() const;
 };
 
 

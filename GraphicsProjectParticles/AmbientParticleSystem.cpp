@@ -10,19 +10,12 @@
 #include "ShaderProgram.h"
 #include "Framebuffer.h"
 
-using namespace constants;
+using namespace ambient_particle_system;
 
-#define NUM_TEXTURES_PER_FRAMEBUFFER 3
-
-namespace {
-
-
-
-}
 
 AmbientParticleSystem::AmbientParticleSystem(unsigned int dimen) :
 	particle_texture_width_(units::getPowerOf2(dimen)), particle_texture_height_(units::getPowerOf2(dimen)),
-	uv_(0), full_size_quad_(0), is_paused_(false),
+	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
 	init_shader_(0), update_shader_(0), draw_shader_(0)
 {
 	framebuffers_[0] = 0;
@@ -30,7 +23,7 @@ AmbientParticleSystem::AmbientParticleSystem(unsigned int dimen) :
 }
 AmbientParticleSystem::AmbientParticleSystem(unsigned int width, unsigned int height) :
 	particle_texture_width_(units::getPowerOf2(width)), particle_texture_height_(units::getPowerOf2(height)), 
-	uv_(0), full_size_quad_(0), is_paused_(false),
+	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
 	init_shader_(0), update_shader_(0), draw_shader_(0)
 {
 	framebuffers_[0] = 0;
@@ -38,8 +31,8 @@ AmbientParticleSystem::AmbientParticleSystem(unsigned int width, unsigned int he
 }
 
 AmbientParticleSystem::~AmbientParticleSystem() {
-	if ( uv_ )				{ delete uv_; }
-	if ( full_size_quad_ )	{ delete full_size_quad_; }
+	if ( uv_buffer_ )		{ delete uv_buffer_; }
+	if ( quad_buffer_ )		{ delete quad_buffer_; }
 	if ( init_shader_ )		{ delete init_shader_; }
 	if ( update_shader_ )	{ delete update_shader_; }
 	if ( draw_shader_ )		{ delete draw_shader_; }
@@ -71,6 +64,12 @@ bool AmbientParticleSystem::initShaders() {
 	}
 	return true;
 }
+bool AmbientParticleSystem::initFramebuffers() {
+	framebuffers_[0] = new Framebuffer(particle_texture_width_, particle_texture_height_, NUM_TEXTURES_PER_FRAMEBUFFER);
+	framebuffers_[1] = new Framebuffer(particle_texture_width_, particle_texture_height_, NUM_TEXTURES_PER_FRAMEBUFFER);
+
+	return framebuffers_[0]->init() && framebuffers_[1]->init();
+}
 void AmbientParticleSystem::getShaderVariableIDs(GLuint shaderProgramID, ShaderVariableIDs &ids, std::vector<std::string> names) {
 	for (int i = 0; i < names.size(); ++i ) {
 		GLint id = glGetAttribLocation( shaderProgramID, names[i].c_str() );
@@ -83,7 +82,28 @@ void AmbientParticleSystem::getShaderUniformIDs(GLuint shaderProgramID, ShaderUn
 		ids.push_back( new IDPair(id, names[i]) );
 	}
 }
-void AmbientParticleSystem::initVertexBuffers() {
+void AmbientParticleSystem::getShaderAttributes() {
+	getShaderVariableIDs(init_shader_->getProgramID(), init_variable_ids_, init::VARIABLE_NAMES);
+	getShaderVariableIDs(update_shader_->getProgramID(), update_variable_ids_, update::VARIABLE_NAMES);
+	getShaderVariableIDs(draw_shader_->getProgramID(), draw_variable_ids_, draw::VARIABLE_NAMES);
+
+	getShaderUniformIDs(init_shader_->getProgramID(), init_uniform_ids_, init::UNIFORM_NAMES);
+	getShaderUniformIDs(update_shader_->getProgramID(), update_uniform_ids_, update::UNIFORM_NAMES);
+	getShaderUniformIDs(draw_shader_->getProgramID(), draw_uniform_ids_, draw::UNIFORM_NAMES);
+}
+void AmbientParticleSystem::createQuadBuffer() {
+	// Create quad for textures to draw onto.
+	static const GLfloat quad_array[] = {
+		-1.0f,	-1.0f,  0.0f,	
+		 1.0f,	 1.0f,  0.0f,
+		-1.0f,	 1.0f,  0.0f,
+		-1.0f,	-1.0f,  0.0f,
+		 1.0f,	-1.0f,  0.0f,
+		 1.0f,	 1.0f,  0.0f,
+	};
+	quad_buffer_ = new VertexBuffer( 3, 6, quad_array );
+}
+void AmbientParticleSystem::createUVBuffer() {
 	// Build the UV coordinate array for the given dimensions.
 	// This is what gives us the number of particles (it functions as the particle veretx data by indexing to uv coordinates).
 	unsigned int count = particle_texture_width_ * particle_texture_height_;
@@ -98,96 +118,54 @@ void AmbientParticleSystem::initVertexBuffers() {
 			uv_data.push_back((GLfloat)(y) * heightRecip);
 		}
 	}
-	uv_ = new VertexBuffer(2, count, uv_data);
-
-	// Create quad for textures to draw onto.
-	static const GLfloat quad_array[] = {
-		-1.0f,	-1.0f,  0.0f,	
-		 1.0f,	 1.0f,  0.0f,
-		-1.0f,	 1.0f,  0.0f,
-		-1.0f,	-1.0f,  0.0f,
-		 1.0f,	-1.0f,  0.0f,
-		 1.0f,	 1.0f,  0.0f,
-	};
-	std::vector<GLfloat> quad(quad_array, quad_array + 18);
-	full_size_quad_ = new VertexBuffer(3, 6, quad);
-}
-
-bool AmbientParticleSystem::initFramebuffers() {
-	framebuffers_[0] = new Framebuffer(particle_texture_width_, particle_texture_height_, NUM_TEXTURES_PER_FRAMEBUFFER);
-	framebuffers_[1] = new Framebuffer(particle_texture_width_, particle_texture_height_, NUM_TEXTURES_PER_FRAMEBUFFER);
-
-	return framebuffers_[0]->init() && framebuffers_[1]->init();
+	uv_buffer_ = new VertexBuffer(2, count, uv_data);
+	uv_data.clear();
 }
 bool AmbientParticleSystem::init() {
+	if ( particle_texture_height_ < 1 || particle_texture_width_ < 1 ) {
+		std::cerr << "Error: Texture width and height must be greater than zero!" << std::endl;
+		return false;
+	}
 	if ( !initShaders() ) {
-		std::cerr << "Error: failed to initialize shaders." << std::endl;
+		std::cerr << "Error: Failed to initialize shaders." << std::endl;
 		return false;
 	}
 	if ( !initFramebuffers() ) {
-		std::cerr << "Error: failed to create framebuffers." << std::endl;
+		std::cerr << "Error: Failed to create framebuffers." << std::endl;
 		return false;
 	}
-	// Get handles for variables and uniforms in these shader programs.
-	getShaderVariableIDs(init_shader_->getProgramID(), init_variable_ids_, constants::init::VARIABLE_NAMES);
-	getShaderVariableIDs(update_shader_->getProgramID(), update_variable_ids_, constants::update::VARIABLE_NAMES);
-	getShaderVariableIDs(draw_shader_->getProgramID(), draw_variable_ids_, constants::draw::VARIABLE_NAMES);
-	
-	getShaderUniformIDs(init_shader_->getProgramID(), init_uniform_ids_,constants::init::UNIFORM_NAMES);
-	getShaderUniformIDs(update_shader_->getProgramID(), update_uniform_ids_, constants::update::UNIFORM_NAMES);
-	getShaderUniformIDs(draw_shader_->getProgramID(), draw_uniform_ids_, constants::draw::UNIFORM_NAMES);
+	glEnable( GL_PROGRAM_POINT_SIZE );
+	// Get handles for variables and uniforms in the shader programs.
+	getShaderAttributes();
 
-	initVertexBuffers();
-
-	// Set resolution uniforms for the init and update shader programs.
-	init_shader_->use();
-	glUniform2f( init_uniform_ids_[constants::init::Uniforms::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
-	update_shader_->use();
-	glUniform2f( update_uniform_ids_[constants::update::Uniforms::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
-	update_shader_->stopUsing();
+	// Create vertex buffers.
+	createQuadBuffer();
+	createUVBuffer();
 	
 	initParticleDrawing();
-	glEnable( GL_PROGRAM_POINT_SIZE );
 	return true;
 }
 void AmbientParticleSystem::initParticleDrawing() {
-	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, framebuffers_[0]->getBufferID() );
+	framebuffers_[0]->drawTo();
 	// Store the previous viewport.
-	GLint prevViewport[4];
-	glGetIntegerv( GL_VIEWPORT, prevViewport );
-	glViewport( 0, 0, particle_texture_width_, particle_texture_height_ );
-	glClear( GL_COLOR_BUFFER_BIT );
-	glDisable( GL_DEPTH_TEST );
-	glBlendFunc( GL_ONE, GL_ZERO);
-
+	std::vector<GLint> prevViewport = setWindowForUpdate();
 	init_shader_->use();
-	GLint attrib = init_variable_ids_[constants::init::Variables::IN_VERTEX_POS]->id;
+	glUniform2f( init_uniform_ids_[init::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
+
+	quad_buffer_->bind();
+	GLint attrib = init_variable_ids_[init::IN_VERTEX_POS]->id;
 	glEnableVertexAttribArray( attrib );
-	glBindBuffer( GL_ARRAY_BUFFER, full_size_quad_->getBufferID() );
-	glVertexAttribPointer( attrib, full_size_quad_->vertexSize,
+	glVertexAttribPointer( attrib, quad_buffer_->vertexSize,
 				GL_FLOAT,	// type
 				GL_FALSE,	// normalized?
 				0,			// stride
 				(void*)0 );	// Array buffer offset
-	glDrawArrays( GL_TRIANGLES, 0, full_size_quad_->numVertices );
+	glDrawArrays( GL_TRIANGLES, 0, quad_buffer_->numVertices );
 
-
-	glBindTexture( GL_TEXTURE_2D, framebuffers_[0]->getTexture(0) );
-	GLfloat *pixels = new GLfloat[particle_texture_width_ * particle_texture_height_ * 4];
-	glReadPixels( 0, 0, particle_texture_width_, particle_texture_height_, GL_RGBA, GL_FLOAT, pixels);
-
-	std::cout << "some pixel entries:\n";
-	std::cout << "pixel0:     " << pixels[0] << "  " << pixels[1] << "  " << pixels[2] << "  " << pixels[3] << std::endl;
-	std::cout << "pixel10:    " << pixels[40] << "  " << pixels[41] << "  " << pixels[42] << "  " << pixels[43] << std::endl;
-	std::cout << "pixel100:   " << pixels[400] << "  " << pixels[401] << "  " << pixels[402] << "  " << pixels[403] << std::endl;
-	std::cout << "pixel10000: " << pixels[40000] << "  " << pixels[40001] << "  " << pixels[40002] << "  " << pixels[40003] << std::endl;
-
-	delete pixels;
-
-	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	quad_buffer_->unbind();
+	framebuffers_[0]->stopDrawingTo();
 	glDisableVertexAttribArray( attrib );
 	init_shader_->stopUsing();
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 	// Return the viewport to its previous state.
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
 }
@@ -196,48 +174,42 @@ void AmbientParticleSystem::update(units::MS elapsedTime, glm::vec3 gravityPos) 
 		return;
 	}
 	update_shader_->use();
-	// Bind our uniform/variable handles to the update shader (resolution is already bound).
-	glUniform1f( update_uniform_ids_[constants::update::U_DELTA_T]->id, 0.05f );
-	glUniform1f( update_uniform_ids_[constants::update::U_K_FORCE]->id, 5.0f);
-	glUniform3f( update_uniform_ids_[constants::update::U_INPUT_POS]->id, gravityPos.x, gravityPos.y, gravityPos.z );
-	drawUpdateBuffer();
-	update_shader_->stopUsing();
-	swapFramebuffers();
-}
-void AmbientParticleSystem::drawUpdateBuffer() {
-	// Assumes we're already using update shader program.
 	// Bind the framebuffer that wasn't updated last time (or initialized from).
-	glBindFramebuffer( GL_FRAMEBUFFER, framebuffers_[1]->getBufferID() );
-	// Store the previous viewport.
-	GLint prevViewport[4];
-	glGetIntegerv( GL_VIEWPORT, prevViewport );
-	glViewport( 0, 0, framebuffers_[1]->width, framebuffers_[1]->height );
-	glClear( GL_COLOR_BUFFER_BIT );
-	glDisable( GL_DEPTH_TEST ); // Draw everything flat.
-	glBlendFunc( GL_ONE, GL_ZERO );
+	framebuffers_[1]->drawTo();
+	// Bind our uniform/variable handles to the update shader.
+	glUniform2f( update_uniform_ids_[update::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
+	glUniform1f( update_uniform_ids_[update::U_ELAPSED_TIME]->id, units::millisToSeconds(elapsedTime) );
+	glUniform1f( update_uniform_ids_[update::U_K_FORCE]->id, 20.0f);
+	glUniform3f( update_uniform_ids_[update::U_INPUT_POS]->id, gravityPos.x, gravityPos.y, gravityPos.z );
+
+	std::vector<GLint> prevViewport = setWindowForUpdate();
 
 	// Bind our textures.
-	for (unsigned int i = 0; i < framebuffers_[0]->numTextures; ++i) {
-		glActiveTexture( GL_TEXTURE0 + i );
-		glBindTexture( GL_TEXTURE_2D, framebuffers_[0]->getTexture(i) );
-		glUniform1i( update_uniform_ids_[constants::update::Uniforms::U_TEX_0 + i]->id, i );
+	GLint textureUniformLocations[NUM_TEXTURES_PER_FRAMEBUFFER];
+	for (unsigned int i = 0; i < NUM_TEXTURES_PER_FRAMEBUFFER; ++i) {
+		 textureUniformLocations[i] = update_uniform_ids_[update::U_TEX_0 + i]->id;
 	}
-	GLint attrib = update_variable_ids_[constants::update::Variables::IN_VERTEX_POS]->id;
+	framebuffers_[0]->bindTextures( NUM_TEXTURES_PER_FRAMEBUFFER, textureUniformLocations );
+
+	GLint attrib = update_variable_ids_[update::IN_VERTEX_POS]->id;
+	quad_buffer_->bind();
 	glEnableVertexAttribArray( attrib );
-	glBindBuffer( GL_ARRAY_BUFFER, full_size_quad_->getBufferID() );
-	glVertexAttribPointer( attrib, full_size_quad_->vertexSize,
+	glVertexAttribPointer( attrib, quad_buffer_->vertexSize,
 				GL_FLOAT,	// type
 				GL_FALSE,	// normalized?
 				0,			// stride
 				(void*)0 );	// Array buffer offset
+	glDrawArrays( GL_TRIANGLES, 0, quad_buffer_->numVertices);
 
-	glDrawArrays( GL_TRIANGLES, 0, full_size_quad_->numVertices);
-
-	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glDisableVertexAttribArray( attrib );
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	quad_buffer_->unbind();
+	framebuffers_[0]->unbindTextures();
+	framebuffers_[1]->stopDrawingTo();
+
 	// Return the viewport to its previous state.
-	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
+	glViewport( prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
+	update_shader_->stopUsing();
+	swapFramebuffers();
 }
 
 void AmbientParticleSystem::swapFramebuffers() {
@@ -245,35 +217,46 @@ void AmbientParticleSystem::swapFramebuffers() {
 	framebuffers_[0] = framebuffers_[1];
 	framebuffers_[1] = temp;
 }
+std::vector<GLint> AmbientParticleSystem::setWindowForUpdate() {
+	// Store the previous viewport.
+	GLint prevViewport[4];
+	glGetIntegerv( GL_VIEWPORT, prevViewport );
+	glViewport( 0, 0, particle_texture_width_, particle_texture_height_ );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glDisable( GL_DEPTH_TEST ); // Draw everything flat.
+	glBlendFunc( GL_ONE, GL_ZERO );
+	std::vector<GLint> viewport(prevViewport, prevViewport + 4);
+	return viewport;
+}
 
-void AmbientParticleSystem::draw( glm::mat4 PVM ) {
+void AmbientParticleSystem::draw( const glm::mat4 &PVM ) {
+	//glDisable( GL_DEPTH_TEST );
 	draw_shader_->use();
 	// Enable additive blending, so overlapping particles appear brighter.
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE ); 
 	
-	glUniformMatrix4fv( update_uniform_ids_[constants::draw::Uniforms::U_PVM]->id, 1, GL_FALSE, &PVM[0][0] );
-	glUniform4f(draw_uniform_ids_[constants::draw::Uniforms::U_COLOUR]->id, 0.0f, 0.1f, 1.0f, 0.6f);
-	glUniform1f(draw_uniform_ids_[constants::draw::Uniforms::U_POINT_SIZE]->id, 4.0f);
+	glUniformMatrix4fv( draw_uniform_ids_[draw::U_PVM]->id, 1, GL_FALSE, &PVM[0][0] );
+	glUniform4f( draw_uniform_ids_[draw::U_COLOUR]->id, 0.9f, 0.3f, 0.1f, 0.6f);
+	glUniform1f( draw_uniform_ids_[draw::U_POINT_SIZE]->id, 4.0f);
 
 	// Bind our textures.
-	for (unsigned int i = 0; i < framebuffers_[0]->numTextures; ++i) {
-		glActiveTexture( GL_TEXTURE0 + i );
-		glBindTexture( GL_TEXTURE_2D, framebuffers_[0]->getTexture(i) );
-		glUniform1i( draw_uniform_ids_[constants::draw::Uniforms::U_TEX_0 + i]->id, i );
+	GLint textureUniformLocations[NUM_TEXTURES_PER_FRAMEBUFFER];
+	for (unsigned int i = 0; i < NUM_TEXTURES_PER_FRAMEBUFFER; ++i) {
+		 textureUniformLocations[i] = draw_uniform_ids_[draw::U_TEX_0 + i]->id;
 	}
-	GLint attrib = draw_variable_ids_[constants::draw::Variables::IN_UV]->id;
+	framebuffers_[0]->bindTextures( NUM_TEXTURES_PER_FRAMEBUFFER, textureUniformLocations );
+	GLint attrib = draw_variable_ids_[draw::IN_UV]->id;
+	uv_buffer_->bind();
 	glEnableVertexAttribArray( attrib );
-	glBindBuffer( GL_ARRAY_BUFFER, uv_->getBufferID() );
-	glVertexAttribPointer( attrib, uv_->vertexSize,
+	glVertexAttribPointer( attrib, uv_buffer_->vertexSize,
 				GL_FLOAT,	// type
 				GL_FALSE,	// normalized?
 				0,			// stride
 				(void*)0 );	// Array buffer offset
+	glDrawArrays( GL_POINTS, 0, uv_buffer_->numVertices );
 
-	glDrawArrays( GL_POINTS, 0, uv_->numVertices );
-
-	glBindTexture( GL_TEXTURE_2D, 0 );
-	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glDisableVertexAttribArray( attrib );
+	framebuffers_[0]->unbindTextures();
+	uv_buffer_->unbind();
 	draw_shader_->stopUsing();
 }

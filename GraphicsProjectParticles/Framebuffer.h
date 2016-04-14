@@ -27,7 +27,7 @@ public:
 	GLuint getBufferID() { return fbo_; }
 	std::vector<GLuint> getTextures() { return textures_; }
 	GLuint getTexture(unsigned int num);
-	void bindTextures(std::vector<GLint> uniformTextureLocations);
+	void bindTextures(unsigned int num, GLint *uniformTextureLocations);
 	void unbindTextures();
 	void drawTo();
 	void stopDrawingTo();

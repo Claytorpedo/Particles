@@ -15,7 +15,7 @@ class AmbientParticleSystem {
 private:
 	bool is_paused_;
 	unsigned int particle_texture_width_, particle_texture_height_;
-	VertexBuffer *uv_, *full_size_quad_;
+	VertexBuffer *uv_buffer_, *quad_buffer_;
 	ShaderProgram *init_shader_, *update_shader_, *draw_shader_;
 	Framebuffer *framebuffers_[2]; // Two frame buffers to swap between.
 
@@ -31,13 +31,15 @@ private:
 	ShaderUniformIDs init_uniform_ids_, update_uniform_ids_, draw_uniform_ids_;
 
 	bool initShaders();
+	bool initFramebuffers();
 	void getShaderVariableIDs(GLuint shaderProgramID, ShaderVariableIDs &ids, std::vector<std::string> names);
 	void getShaderUniformIDs(GLuint shaderProgramID, ShaderUniformIDs &ids, std::vector<std::string> names);
-	void initVertexBuffers();
-	bool initFramebuffers();
+	void getShaderAttributes();
+	void createQuadBuffer();
+	void createUVBuffer();
 	void initParticleDrawing();
-	void drawUpdateBuffer();
 	void swapFramebuffers();
+	std::vector<GLint> setWindowForUpdate();
 public:
 	AmbientParticleSystem(unsigned int dimentions_exponent);
 	AmbientParticleSystem(unsigned int width_exponent, unsigned int height_exponent);
@@ -45,8 +47,52 @@ public:
 
 	bool init();
 	void update(units::MS elapsedTime, glm::vec3 gravityPos );
-	void draw( glm::mat4 PVM );
+	void draw( const glm::mat4 &PVM );
 };
+
+namespace ambient_particle_system {
+	// Shader file paths from the main directory.
+	const char* const AMB_PART_INIT_VERT_PATH = "shaders/AmbientParticleInit.vert";
+	const char* const AMB_PART_INIT_FRAG_PATH = "shaders/AmbientParticleInit.frag";
+	const char* const AMB_PART_UPDATE_VERT_PATH = "shaders/AmbientParticleUpdate.vert";
+	const char* const AMB_PART_UPDATE_FRAG_PATH = "shaders/AmbientParticleUpdate.frag";
+	const char* const AMB_PART_DRAW_VERT_PATH = "shaders/AmbientParticleDraw.vert";
+	const char* const AMB_PART_DRAW_FRAG_PATH = "shaders/AmbientParticleDraw.frag";
+	
+	// Everything in mirrored string vectors with enums for easy access.
+	// Nested namespaces are so the char arrays don't get scoped instead of the vectors.
+	namespace init {
+		namespace h {
+			const char* const init_vars_char[] = { "inVertexPos" };
+			const char* const init_unis_char[] = { "uResolution" };
+		}
+		enum Variables { IN_VERTEX_POS = 0, TOTAL_VARS };
+		enum Uniforms { U_RESOLUTION = 0, TOTAL_UNIFORMS };
+		const std::vector<std::string> VARIABLE_NAMES(h::init_vars_char, std::end(h::init_vars_char));
+		const std::vector<std::string> UNIFORM_NAMES(h::init_unis_char, std::end(h::init_unis_char));
+	}
+	namespace update {
+		namespace h {
+			const char* const update_vars_char[] = { "inVertexPos" };
+			const char* const update_unis_char[] = { "uResolution", "uElapsedTime", "uInputPos", "uKForce", "uTexPos", "uTexVel", "uTexOther" };
+		}
+		enum Variables { IN_VERTEX_POS = 0, TOTAL_VARS };
+		enum Uniforms { U_RESOLUTION = 0, U_ELAPSED_TIME, U_INPUT_POS, U_K_FORCE, U_TEX_0, U_TEX_1, U_TEX_2, TOTAL_UNIFORMS };
+		const std::vector<std::string> VARIABLE_NAMES(h::update_vars_char, std::end(h::update_vars_char));
+		const std::vector<std::string> UNIFORM_NAMES(h::update_unis_char, std::end(h::update_unis_char));
+	}
+	namespace draw {
+		namespace h {
+			const char* const draw_vars_char[] = { "inUV" };
+			const char* const draw_unis_char[] = { "uPointSize", "uPVM", "uColour", "uTexPos", "uTexVel", "uTexOther" };
+		}
+		enum Variables { IN_UV = 0, TOTAL_VARS };
+		enum Uniforms { U_POINT_SIZE = 0, U_PVM, U_COLOUR, U_TEX_0, U_TEX_1, U_TEX_2, TOTAL_UNIFORMS };
+		const std::vector<std::string> VARIABLE_NAMES(h::draw_vars_char, std::end(h::draw_vars_char));
+		const std::vector<std::string> UNIFORM_NAMES(h::draw_unis_char, std::end(h::draw_unis_char));
+	}
+	const unsigned int NUM_TEXTURES_PER_FRAMEBUFFER = 3;
+}
 
 
 #endif // _AMBIENT_PARTICLE_SYSTEM_H
