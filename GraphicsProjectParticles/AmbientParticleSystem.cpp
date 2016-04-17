@@ -169,7 +169,7 @@ void AmbientParticleSystem::initParticleDrawing() {
 	// Return the viewport to its previous state.
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
 }
-void AmbientParticleSystem::update(units::MS elapsedTime, glm::vec3 gravityPos) {
+void AmbientParticleSystem::update(units::MS elapsedTime, glm::vec3 gravityPos, const unsigned int gravityForce) {
 	if ( is_paused_ ) {
 		return;
 	}
@@ -179,7 +179,7 @@ void AmbientParticleSystem::update(units::MS elapsedTime, glm::vec3 gravityPos) 
 	// Bind our uniform/variable handles to the update shader.
 	glUniform2f( update_uniform_ids_[update::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
 	glUniform1f( update_uniform_ids_[update::U_ELAPSED_TIME]->id, units::millisToSeconds(elapsedTime) );
-	glUniform1f( update_uniform_ids_[update::U_K_FORCE]->id, 20.0f);
+	glUniform1f( update_uniform_ids_[update::U_K_FORCE]->id, gravityForce);
 	glUniform3f( update_uniform_ids_[update::U_INPUT_POS]->id, gravityPos.x, gravityPos.y, gravityPos.z );
 
 	std::vector<GLint> prevViewport = setWindowForUpdate();
@@ -229,7 +229,7 @@ std::vector<GLint> AmbientParticleSystem::setWindowForUpdate() {
 	return viewport;
 }
 
-void AmbientParticleSystem::draw( const glm::mat4 &PVM ) {
+void AmbientParticleSystem::draw( const glm::mat4 &PVM, const unsigned int pointSize) {
 	//glDisable( GL_DEPTH_TEST );
 	draw_shader_->use();
 	// Enable additive blending, so overlapping particles appear brighter.
@@ -237,7 +237,7 @@ void AmbientParticleSystem::draw( const glm::mat4 &PVM ) {
 	
 	glUniformMatrix4fv( draw_uniform_ids_[draw::U_PVM]->id, 1, GL_FALSE, &PVM[0][0] );
 	glUniform4f( draw_uniform_ids_[draw::U_COLOUR]->id, 0.9f, 0.3f, 0.1f, 0.6f);
-	glUniform1f( draw_uniform_ids_[draw::U_POINT_SIZE]->id, 4.0f);
+	glUniform1f( draw_uniform_ids_[draw::U_POINT_SIZE]->id, pointSize);
 
 	// Bind our textures.
 	GLint textureUniformLocations[NUM_TEXTURES_PER_FRAMEBUFFER];

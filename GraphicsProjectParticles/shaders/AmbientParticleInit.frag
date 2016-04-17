@@ -2,7 +2,6 @@
 
 layout(location = 0) out vec4 position;
 layout(location = 1) out vec4 velocity;
-layout(location = 2) out vec4 other;
 
 uniform vec2 uResolution;
 
@@ -16,9 +15,7 @@ void main() {
 
   vec3 pos = vec3(uv.x, uv.y, rand(uv));
   vec3 vel = vec3(-2.0, 0.0, 0.0);
-  vec4 col = vec4(1.0, 0.3, 0.1, 0.5);
 
   position = vec4(pos, 1.0);
   velocity = vec4(vel, 1.0);
-  other = col;
 }

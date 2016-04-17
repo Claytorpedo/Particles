@@ -94,8 +94,8 @@
     <None Include="shaders\AmbientParticleInit.vert" />
     <None Include="shaders\AmbientParticleUpdate.frag" />
     <None Include="shaders\AmbientParticleUpdate.vert" />
-    <None Include="shaders\basicShader.frag" />
-    <None Include="shaders\basicShader.vert" />
+    <None Include="shaders\testShader.frag" />
+    <None Include="shaders\testShader.vert" />
     <None Include="shaders\drawTexture.frag" />
     <None Include="shaders\drawTexture.vert" />
   </ItemGroup>

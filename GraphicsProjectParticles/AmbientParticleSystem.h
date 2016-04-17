@@ -46,8 +46,8 @@ public:
 	~AmbientParticleSystem();
 
 	bool init();
-	void update(units::MS elapsedTime, glm::vec3 gravityPos );
-	void draw( const glm::mat4 &PVM );
+	void update(units::MS elapsedTime, glm::vec3 gravityPos, const unsigned int gravityForce = 10 );
+	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
 };
 
 namespace ambient_particle_system {
@@ -74,24 +74,24 @@ namespace ambient_particle_system {
 	namespace update {
 		namespace h {
 			const char* const update_vars_char[] = { "inVertexPos" };
-			const char* const update_unis_char[] = { "uResolution", "uElapsedTime", "uInputPos", "uKForce", "uTexPos", "uTexVel", "uTexOther" };
+			const char* const update_unis_char[] = { "uResolution", "uElapsedTime", "uInputPos", "uKForce", "uTexPos", "uTexVel" };
 		}
 		enum Variables { IN_VERTEX_POS = 0, TOTAL_VARS };
-		enum Uniforms { U_RESOLUTION = 0, U_ELAPSED_TIME, U_INPUT_POS, U_K_FORCE, U_TEX_0, U_TEX_1, U_TEX_2, TOTAL_UNIFORMS };
+		enum Uniforms { U_RESOLUTION = 0, U_ELAPSED_TIME, U_INPUT_POS, U_K_FORCE, U_TEX_0, U_TEX_1, TOTAL_UNIFORMS };
 		const std::vector<std::string> VARIABLE_NAMES(h::update_vars_char, std::end(h::update_vars_char));
 		const std::vector<std::string> UNIFORM_NAMES(h::update_unis_char, std::end(h::update_unis_char));
 	}
 	namespace draw {
 		namespace h {
 			const char* const draw_vars_char[] = { "inUV" };
-			const char* const draw_unis_char[] = { "uPointSize", "uPVM", "uColour", "uTexPos", "uTexVel", "uTexOther" };
+			const char* const draw_unis_char[] = { "uPointSize", "uPVM", "uColour", "uTexPos", "uTexVel" };
 		}
 		enum Variables { IN_UV = 0, TOTAL_VARS };
-		enum Uniforms { U_POINT_SIZE = 0, U_PVM, U_COLOUR, U_TEX_0, U_TEX_1, U_TEX_2, TOTAL_UNIFORMS };
+		enum Uniforms { U_POINT_SIZE = 0, U_PVM, U_COLOUR, U_TEX_0, U_TEX_1, TOTAL_UNIFORMS };
 		const std::vector<std::string> VARIABLE_NAMES(h::draw_vars_char, std::end(h::draw_vars_char));
 		const std::vector<std::string> UNIFORM_NAMES(h::draw_unis_char, std::end(h::draw_unis_char));
 	}
-	const unsigned int NUM_TEXTURES_PER_FRAMEBUFFER = 3;
+	const unsigned int NUM_TEXTURES_PER_FRAMEBUFFER = 2;
 }
 
 

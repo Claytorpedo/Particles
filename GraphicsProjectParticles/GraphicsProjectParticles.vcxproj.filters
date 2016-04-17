@@ -70,12 +70,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\basicShader.vert">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\basicShader.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="shaders\AmbientParticleInit.frag">
       <Filter>Source Files\shaders</Filter>
     </None>
@@ -98,6 +92,12 @@
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="shaders\drawTexture.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\testShader.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\testShader.vert">
       <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>

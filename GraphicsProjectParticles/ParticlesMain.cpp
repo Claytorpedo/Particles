@@ -18,11 +18,16 @@
 using namespace constants;
 
 AmbientParticleSystem* particleSystem = NULL;
+unsigned int pointSize = DEFAULT_POINT_SIZE;
+unsigned int gravForce = DEFAULT_GRAV_FORCE;
+unsigned int width = DEFAULT_PARTICLE_EXPONENT;
+unsigned int height = DEFAULT_PARTICLE_EXPONENT;
 
 void close () {
 	delete particleSystem;
 	SDL_Quit();
 }
+// Returns true if the user closed the window.
 bool getInput(Input *input) {
 	input->newFrameClear();
 	SDL_Event e;
@@ -46,15 +51,42 @@ bool getInput(Input *input) {
 }
 void processInput(Input *input, Graphics *graphics) {
 	// Change colours because why not.
-	if ( input->wasKeyPressed( SDLK_r ) ) {
-		graphics->setClearColour(0.7,0.3,0.3,1);
-	} else if ( input->wasKeyPressed( SDLK_g ) ) {
-		graphics->setClearColour(0,1,0,1);
-	} else if ( input->wasKeyPressed( SDLK_b ) ) {
-		graphics->setClearColour(0,0,1,1);
-	} else if ( input->wasKeyPressed( SDLK_BACKSPACE ) ) {
-		graphics->setClearColour(0,0,0,1);
+	if ( input->isKeyHeld( SDLK_c ) ) {
+		if ( input->wasKeyPressed( SDLK_r ) ) {
+			graphics->setClearColour(0.7f,0.3f,0.3f,1);
+		} else if ( input->wasKeyPressed( SDLK_g ) ) {
+			graphics->setClearColour(0.3f,0.7f,0.3f,1);
+		} else if ( input->wasKeyPressed( SDLK_b ) ) {
+			graphics->setClearColour(0.3f,0.3f,0.7f,1);
+		} else if ( input->wasKeyPressed( SDLK_BACKSPACE ) ) {
+			graphics->setClearColour(0,0,0,1);
+		}
 	}
+	// Check for change in particle size.
+	if ( input->isKeyHeld( SDLK_p ) ) {
+		if ( input->wasKeyPressed( SDLK_DOWN ) ) {
+			pointSize = pointSize > MIN_POINT_SIZE ? pointSize - POINT_SIZE_IRCR : MIN_POINT_SIZE;
+		} else if ( input->wasKeyPressed( SDLK_UP ) ) {
+			pointSize = pointSize < MAX_POINT_SIZE ? pointSize + POINT_SIZE_IRCR : MAX_POINT_SIZE;
+		} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
+			pointSize = MIN_POINT_SIZE;
+		} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
+			pointSize = MAX_POINT_SIZE;
+		}
+	}
+	// Check for change in gravity force.
+	if ( input->isKeyHeld( SDLK_g ) ) {
+		if ( input->wasKeyPressed( SDLK_DOWN ) ) {
+			gravForce = gravForce > MIN_GRAV_FORCE ? gravForce - GRAV_FORCE_INCR : MIN_GRAV_FORCE;
+		} else if ( input->wasKeyPressed( SDLK_UP ) ) {
+			gravForce = gravForce < MAX_GRAV_FORCE ? gravForce + GRAV_FORCE_INCR : MAX_GRAV_FORCE;
+		} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
+			gravForce = MIN_GRAV_FORCE;
+		} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
+			gravForce = MAX_GRAV_FORCE;
+		}
+	}
+
 }
 
 int main (int argc, char* args[]) {
@@ -91,19 +123,21 @@ int main (int argc, char* args[]) {
 		}
 		processInput(&input, &graphics);
 
-		graphics.clear();
+		// Update the scene.
 
 		currentTime = SDL_GetTicks();
 		elapsedTime = currentTime - previousTime;
+		elapsedTime = elapsedTime < MAX_FRAME_DUR ? elapsedTime : MAX_FRAME_DUR;
 		previousTime = currentTime;
-		particleSystem->update( elapsedTime, gravPos );
+		particleSystem->update( elapsedTime, gravPos, gravForce );
+
+		// Draw the scene.
+
 		graphics.clear();
 
-		particleSystem->draw( PVM );
+		particleSystem->draw( PVM, pointSize );
 
 		graphics.present();
-		
-		
 	}
 	close();
 	return 0;
@@ -149,45 +183,4 @@ It would be a better choice to declare these variables in the global scope.
 
 
 	Set particle colour based on speed.
-
-	Use float textures. Particles are represented by UV coords into the textures.
-	The state textures use nearest filtering (so that you don't get any weighted average).
-
-	Can't write to the same textures reading from, so need a dupe set of framebuffers and textures to swap between each frame.
-	Draw num of particles based on the compute textures size (so 1024x1024 is over 1m particles).
-
-	Each particles is just represented then by a UV coordinate given to the vert shader, where it can use the UV
-	to look up position and colour (and velocity in the computation shader, which isn't used to draw things to the screen I don't think).
-
-	He uses a fixed time step, but I should be able to pass in a uniform elapsed time variable.
-
-	SHADERS:
-		Init shader: place the particles positions, velocities, and colours. Everything fancy happens in the frag shader, it uses the same vert shader as ComputeShader
-			If I can't think of a good way to input a bunch of random numbers for this initialization, I can use
-			http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-			float snoise(vec2 co){
-				return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-			}
-
-			void main(void)
-			{
-				float n = snoise(vec2(textureCoord.x,textureCoord.y)); 
-				gl_FragColor = vec4(n, n, n, 1.0 );
-			}
-			to get some randomness.
-			NOTE: According to http://stackoverflow.com/questions/3956478/understanding-randomness/3956538#3956538
-			it appears that if I add random numbers together I'll tend to get a uniform distribution
-				as in snoise + snoise + snoise as long as I have different seeds for each one somehow...
-					Maybe I should make different functions and use them all
-					can also look at https://github.com/ashima/webgl-noise/tree/master/src
-			
-		Compute shader: This shader updates the particle properties for a frame
-				vert is really simple just takes a position
-				frag is where the magic happens. Outputs pos and vel (also has an unused one in example)
-				
-		Draw shader: actually draw the particles
-			vert takes in the textures the compute shader computed.
-					sets the position and can also pass other things along (like if I want to do colour based on velocity)
-			frag just sets the colour.
-
 */
