@@ -34,16 +34,16 @@ namespace constants {
 	const float	MIN_GRAV_FORCE = -10;
 	const float	MAX_GRAV_FORCE = 50;
 	const float	GRAV_FORCE_SMALL_INCR = 0.1f;
-	const float GRAV_FORCE_BIG_INCR = 1.0f;
+	const float GRAV_FORCE_LARGE_INCR = 1.0f;
 
-	const unsigned int	DEFAULT_POINT_SIZE = 1;
-	const unsigned int	MIN_POINT_SIZE = 1;
-	const unsigned int	MAX_POINT_SIZE = 20;
-	const unsigned int	POINT_SIZE_IRCR = 1;
+	const int	DEFAULT_POINT_SIZE = 1;
+	const int	MIN_POINT_SIZE = 1;
+	const int	MAX_POINT_SIZE = 20;
+	const int	POINT_SIZE_IRCR = 1;
 
 	const int	DEFAULT_COHESIVENESS = 500;
 	const int	MIN_COHESIVENESS = 1;
-	const int	MAX_COHESIVENESS = 5000;
+	const int	MAX_COHESIVENESS = 2500;
 	const int	COHESIVENESS_SMALL_INCR = 10;
 	const int	COHESIVENESS_LARGE_INCR = 100;
 

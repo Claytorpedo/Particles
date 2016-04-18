@@ -65,7 +65,7 @@ int main (int argc, char* args[]) {
 	bool quit = false;
 	units::MS currentTime, previousTime, elapsedTime;
 	glm::vec4 gravity( -3, -3, -1, DEFAULT_GRAV_FORCE );
-	unsigned int pointSize = DEFAULT_POINT_SIZE;
+	int pointSize = DEFAULT_POINT_SIZE;
 	int cohesiveness = DEFAULT_COHESIVENESS;
 	glm::vec3 pos(0,0,5);
 	glm::vec3 look(-0.35f,-0.35f,-1);

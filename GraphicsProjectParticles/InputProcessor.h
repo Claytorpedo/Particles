@@ -10,8 +10,16 @@
 #include "glm\glm.hpp"
 
 #include <cstdio>
+#include <string>
 
 using namespace constants;
+
+template <typename T>
+inline void changeValues(T &val, T incr, T min, T max, std::string name, bool log = true) {
+	T tmp = val + incr;
+	val = tmp < min ? min : tmp > max ? max : tmp;
+	if (log) { std::cout << name << ": " << val << std::endl; }
+}
 
 class InputProcessor {
 private:
@@ -22,7 +30,7 @@ public:
 	InputProcessor(Graphics* graphics, Camera* camera) : graphics_(graphics), camera_(camera) {}
 	~InputProcessor() {}
 
-	void processInput(Input *input, AmbientParticleSystem* particleSystem, unsigned int &pointSize, int &cohesiveness, glm::vec4 &gravity) {
+	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness, glm::vec4 &gravity) {
 		// Change background colours because why not.
 		if ( input->isKeyHeld( SDLK_c ) ) {
 			if ( input->wasKeyPressed( SDLK_r ) ) {
@@ -34,19 +42,15 @@ public:
 			} else if ( input->wasKeyPressed( SDLK_BACKSPACE ) ) {
 				graphics_->setClearColour(0,0,0,1);
 			}
-			// Check for change in cohesiveness. Using c again here doesn't seem like it should cause slips.
+		// Check for change in cohesiveness. Using c again here doesn't seem like it should cause slips.
 			if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-				float tmp = cohesiveness - COHESIVENESS_SMALL_INCR;
-				cohesiveness = tmp > MIN_COHESIVENESS ? tmp : MIN_COHESIVENESS;
+				changeValues( cohesiveness, -COHESIVENESS_SMALL_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
 			} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-				float tmp = cohesiveness + COHESIVENESS_SMALL_INCR;
-				cohesiveness = tmp < MAX_COHESIVENESS ? tmp : MAX_COHESIVENESS;
+				changeValues( cohesiveness, COHESIVENESS_SMALL_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
 			} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-				float tmp = cohesiveness - COHESIVENESS_LARGE_INCR;
-				cohesiveness = tmp > MIN_COHESIVENESS ? tmp : MIN_COHESIVENESS;
+				changeValues( cohesiveness, -COHESIVENESS_LARGE_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
 			} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-				float tmp = cohesiveness + COHESIVENESS_LARGE_INCR;
-				cohesiveness = tmp < MAX_COHESIVENESS ? tmp : MAX_COHESIVENESS;
+				changeValues( cohesiveness, COHESIVENESS_LARGE_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
 			}
 		}
 		if ( input->wasKeyPressed( SDLK_SPACE ) ) {
@@ -64,33 +68,28 @@ public:
 		// Check for change in particle size.
 		if ( input->isKeyHeld( SDLK_p ) ) {
 			if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-				pointSize = pointSize > MIN_POINT_SIZE ? pointSize - POINT_SIZE_IRCR : MIN_POINT_SIZE;
+				changeValues( pointSize, -POINT_SIZE_IRCR, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
 			} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-				pointSize = pointSize < MAX_POINT_SIZE ? pointSize + POINT_SIZE_IRCR : MAX_POINT_SIZE;
+				changeValues( pointSize, POINT_SIZE_IRCR, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
 			} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-				pointSize = MIN_POINT_SIZE;
+				changeValues( pointSize, -MAX_POINT_SIZE, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
 			} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-				pointSize = MAX_POINT_SIZE;
+				changeValues( pointSize, MAX_POINT_SIZE, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
 			}
 		}
 		// Check for change in gravity force.
 		if ( input->isKeyHeld( SDLK_g ) ) {
 			if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-				float tmp = gravity.w - GRAV_FORCE_SMALL_INCR;
-				gravity.w = tmp > MIN_GRAV_FORCE ? tmp : MIN_GRAV_FORCE;
+				changeValues( gravity.w, -GRAV_FORCE_SMALL_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
 			} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-				float tmp = gravity.w + GRAV_FORCE_SMALL_INCR;
-				gravity.w = tmp < MAX_GRAV_FORCE ? tmp : MAX_GRAV_FORCE;
+				changeValues( gravity.w, +GRAV_FORCE_SMALL_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
 			} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-				float tmp = gravity.w - GRAV_FORCE_BIG_INCR;
-				gravity.w = tmp > MIN_GRAV_FORCE ? tmp : MIN_GRAV_FORCE;
+				changeValues( gravity.w, -GRAV_FORCE_LARGE_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
 			} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-				float tmp = gravity.w + GRAV_FORCE_BIG_INCR;
-				gravity.w = tmp < MAX_GRAV_FORCE ? tmp : MAX_GRAV_FORCE;
+				changeValues( gravity.w, GRAV_FORCE_LARGE_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
 			}
 		}
 		// Update mouse interactions.
-
 		if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
 			// Pan and rotate camera. Zoom too?
 
@@ -101,6 +100,7 @@ public:
 				Ray r = camera_->getRay(x, y);
 				glm::vec3 pos = r.position + 10.0f * r.direction;
 				gravity = glm::vec4( pos, gravity.w );
+				std::cout << "gravity position < x: " << gravity.x << " y: " << gravity.y << " z: " << gravity.z << " >" << std::endl;
 			}
 		}
 	}
