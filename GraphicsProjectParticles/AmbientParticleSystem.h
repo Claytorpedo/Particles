@@ -47,7 +47,7 @@ public:
 	~AmbientParticleSystem();
 
 	bool init();
-	void update(units::MS elapsedTime, glm::vec3 gravityPos, const float gravityForce = 10, const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
+	void update(const units::MS elapsedTime, const glm::vec4 gravity, const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
 	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
 	void togglePause() { is_paused_ = !is_paused_; }
 };
@@ -76,10 +76,10 @@ namespace ambient_particle_system {
 	namespace update {
 		namespace h {
 			const char* const update_vars_char[] = { "inVertexPos" };
-			const char* const update_unis_char[] = { "uResolution", "uElapsedTime", "uCohesiveness", "uInputPos", "uKForce", "uTexPos", "uTexVel" };
+			const char* const update_unis_char[] = { "uResolution", "uElapsedTime", "uCohesiveness", "uGravity", "uTexPos", "uTexVel" };
 		}
 		enum Variables { IN_VERTEX_POS = 0, TOTAL_VARS };
-		enum Uniforms { U_RESOLUTION = 0, U_ELAPSED_TIME, U_COHESIVENESS, U_INPUT_POS, U_K_FORCE, U_TEX_0, U_TEX_1, TOTAL_UNIFORMS };
+		enum Uniforms { U_RESOLUTION = 0, U_ELAPSED_TIME, U_COHESIVENESS, U_GRAVITY, U_TEX_0, U_TEX_1, TOTAL_UNIFORMS };
 		const std::vector<std::string> VARIABLE_NAMES(h::update_vars_char, std::end(h::update_vars_char));
 		const std::vector<std::string> UNIFORM_NAMES(h::update_unis_char, std::end(h::update_unis_char));
 	}

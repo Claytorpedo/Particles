@@ -10,6 +10,7 @@
 #include "ShaderProgram.h"
 #include "AmbientParticleSystem.h"
 #include "Input.h"
+#include "InputProcessor.h"
 #include "Camera.h"
 
 #include "glm\glm.hpp"
@@ -19,20 +20,11 @@
 
 using namespace constants;
 
-AmbientParticleSystem* particleSystem = NULL;
-Camera *camera;
-glm::vec3 gravPos( -3, -3, -1 );
-unsigned int pointSize = DEFAULT_POINT_SIZE;
-float gravForce = DEFAULT_GRAV_FORCE;
-unsigned int width = DEFAULT_PARTICLE_EXPONENT;
-unsigned int height = DEFAULT_PARTICLE_EXPONENT;
-
 void close () {
-	delete particleSystem;
 	SDL_Quit();
 }
 // Returns true if the user closed the window.
-bool getInput(Input *input) {
+bool getInput(Input *input, Graphics *graphics, Camera *camera) {
 	input->newFrameClear();
 	SDL_Event e;
 	// get all the events
@@ -53,6 +45,12 @@ bool getInput(Input *input) {
 		case SDL_MOUSEWHEEL:
 			input->mouseWheelEvent( e );
 			break;
+		case SDL_WINDOWEVENT:
+			if ( e.window.event == SDL_WINDOWEVENT_RESIZED ) {
+				camera->resize(e.window.data1, e.window.data2);
+				graphics->setViewport(0,0,e.window.data1, e.window.data2);
+			}
+			break;
 		case SDL_QUIT:		// user closes window
 			return true;
 			break;
@@ -62,74 +60,19 @@ bool getInput(Input *input) {
 	}
 	return false;
 }
-void processInput(Input *input, Graphics *graphics) {
-	// Change colours because why not.
-	if ( input->isKeyHeld( SDLK_c ) ) {
-		if ( input->wasKeyPressed( SDLK_r ) ) {
-			graphics->setClearColour(0.7f,0.3f,0.3f,1);
-		} else if ( input->wasKeyPressed( SDLK_g ) ) {
-			graphics->setClearColour(0.3f,0.7f,0.3f,1);
-		} else if ( input->wasKeyPressed( SDLK_b ) ) {
-			graphics->setClearColour(0.3f,0.3f,0.7f,1);
-		} else if ( input->wasKeyPressed( SDLK_BACKSPACE ) ) {
-			graphics->setClearColour(0,0,0,1);
-		}
-	}
-	if ( input->wasKeyPressed( SDLK_SPACE ) ) {
-		particleSystem->togglePause();
-	}
-	// Check for change in particle size.
-	if ( input->isKeyHeld( SDLK_p ) ) {
-		if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-			pointSize = pointSize > MIN_POINT_SIZE ? pointSize - POINT_SIZE_IRCR : MIN_POINT_SIZE;
-		} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-			pointSize = pointSize < MAX_POINT_SIZE ? pointSize + POINT_SIZE_IRCR : MAX_POINT_SIZE;
-		} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-			pointSize = MIN_POINT_SIZE;
-		} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-			pointSize = MAX_POINT_SIZE;
-		}
-	}
-	// Check for change in gravity force.
-	if ( input->isKeyHeld( SDLK_g ) ) {
-		if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-			float tmp = gravForce - GRAV_FORCE_SMALL_INCR;
-			gravForce = tmp > MIN_GRAV_FORCE ? tmp : MIN_GRAV_FORCE;
-		} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-			float tmp = gravForce + GRAV_FORCE_SMALL_INCR;
-			gravForce = tmp < MAX_GRAV_FORCE ? tmp : MAX_GRAV_FORCE;
-		} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-			float tmp = gravForce - GRAV_FORCE_BIG_INCR;
-			gravForce = tmp > MIN_GRAV_FORCE ? tmp : MIN_GRAV_FORCE;
-		} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-			float tmp = gravForce + GRAV_FORCE_BIG_INCR;
-			gravForce = tmp < MAX_GRAV_FORCE ? tmp : MAX_GRAV_FORCE;
-		}
-	}
-	// Update mouse interactions.
-	
-	if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
-		// Pan and rotate camera. Zoom too?
-
-
-	} else {
-		if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
-			int x, y;
-			SDL_GetMouseState( &x, &y );
-			Ray r = camera->getRay(x, y);
-			gravPos = r.position + 10.0f * r.direction;
-		}
-	}
-}
 
 int main (int argc, char* args[]) {
 	bool quit = false;
+	glm::vec4 gravity( -3, -3, -1, DEFAULT_GRAV_FORCE );
+	unsigned int pointSize = DEFAULT_POINT_SIZE;
 	Input input;
 	units::MS currentTime, previousTime, elapsedTime;
 	Graphics graphics( WINDOW_TITLE, GL_MAJOR_VER, GL_MINOR_VER );
 	glm::vec3 pos(0,0,5);
 	glm::vec3 look(-0.35f,-0.35f,-1);
-	camera = new Camera(pos, pos + look, glm::vec3(0,1,0), FOV, ASPECT, NEAR, FAR, SCREEN_WIDTH, SCREEN_HEIGHT);
+	Camera camera(pos, pos + look, glm::vec3(0,1,0), FOV, DEFAULT_ASPECT, NEAR, FAR, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
+	AmbientParticleSystem particleSystem( constants::DEFAULT_PARTICLE_EXPONENT );
+	InputProcessor inputProcessor( &graphics, &camera );
 
 	if ( !graphics.init() ) {
 		std::cerr << "Error: failed to initialize graphics!" << std::endl;
@@ -137,8 +80,7 @@ int main (int argc, char* args[]) {
 		close();
 		return 1;
 	}
-	particleSystem = new AmbientParticleSystem( constants::DEFAULT_PARTICLE_EXPONENT );
-	if ( !particleSystem->init() ) {
+	if ( !particleSystem.init() ) {
 		std::cerr << "Error: Failed to initialize particle system!" << std::endl;
 		getchar();
 		close();
@@ -146,23 +88,23 @@ int main (int argc, char* args[]) {
 	}
 	previousTime = SDL_GetTicks();
 	while (!quit) {
-		if ( getInput(&input) || input.wasKeyPressed(SDLK_ESCAPE) ) {
+		if ( getInput(&input, &graphics, &camera) || input.wasKeyPressed(SDLK_ESCAPE) ) {
 			break;
 		}
-		processInput(&input, &graphics);
+		inputProcessor.processInput( &input, &particleSystem, pointSize, gravity );
 		// Update the scene.
 
 		currentTime = SDL_GetTicks();
 		elapsedTime = currentTime - previousTime;
 		elapsedTime = elapsedTime < MAX_FRAME_DUR ? elapsedTime : MAX_FRAME_DUR;
 		previousTime = currentTime;
-		particleSystem->update( elapsedTime, gravPos, gravForce );
+		particleSystem.update( elapsedTime, gravity );
 
 		// Draw the scene.
 
 		graphics.clear();
 
-		particleSystem->draw( camera->getProjectionView(), pointSize );
+		particleSystem.draw( camera.getProjectionView(), pointSize );
 
 		graphics.present();
 	}

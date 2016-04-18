@@ -9,8 +9,7 @@ layout(location = 1) out vec4 velocity;
 uniform vec2 uResolution;
 uniform float uElapsedTime;
 uniform int uCohesiveness; // Keeps the particles together. Higher number = less together.
-uniform vec3 uInputPos;
-uniform float uKForce;
+uniform vec4 uGravity;
 uniform sampler2D uTexPos;  // pos
 uniform sampler2D uTexVel;  // vel
 
@@ -20,9 +19,9 @@ void main() {
   vec3 pos = texture(uTexPos, uv).rgb;
   vec3 vel = texture(uTexVel, uv).rgb;
 
-  vec3 toGrav = uInputPos - pos;
+  vec3 toGrav = uGravity.xyz - pos;
   float d2 = toGrav.x * toGrav.x + toGrav.y * toGrav.y + toGrav.z * toGrav.z;
-  vec3 accel = toGrav * uKForce / clamp((d2 == 0.0 ? EPS : d2), -uCohesiveness, uCohesiveness);
+  vec3 accel = toGrav * uGravity.w / clamp((d2 == 0.0 ? EPS : d2), -uCohesiveness, uCohesiveness);
 
   pos += vel * uElapsedTime;
   vel = vel * K_DECEL + accel * uElapsedTime;

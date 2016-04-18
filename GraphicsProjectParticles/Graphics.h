@@ -16,7 +16,8 @@ public:
 
 	bool init();
 	void setClearColour(float r, float g, float b, float a);
-	void setDrawWindow(units::Pixel x = 0, units::Pixel y = 0, units::Pixel w = constants::SCREEN_WIDTH, units::Pixel h = constants::SCREEN_HEIGHT);
+	void setViewport(units::Pixel x = 0, units::Pixel y = 0, 
+		units::Pixel w = constants::DEFAULT_SCREEN_WIDTH, units::Pixel h = constants::DEFAULT_SCREEN_HEIGHT);
 	void clear();
 	void present();
 

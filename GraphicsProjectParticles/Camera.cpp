@@ -8,9 +8,9 @@
 
 Camera::Camera(glm::vec3 position, glm::vec3 lookAt, glm::vec3 up, float FOV, float aspect, float near, float far,
 			   units::Pixel screenWidth, units::Pixel screenHeight) 
-			   : FOV_(FOV), aspect_(aspect), near_(near), far_(far), screen_width_(screenWidth), screen_height_(screenHeight) {
+			   : FOV_rads_(glm::radians(FOV)), aspect_(aspect), near_(near), far_(far), screen_width_(screenWidth), screen_height_(screenHeight) {
 		view_ = glm::lookAt(position, lookAt, up);
-		projection_ = glm::perspective( glm::radians( FOV_ ), aspect_, near_, far_ );
+		projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_ );
 		updateProjectionView();
 }
 
@@ -19,8 +19,8 @@ void Camera::updateProjectionView() {
 }
 
 void Camera::setProjection( float FOV, float aspect, float near, float far ) {
-	FOV_ = FOV; aspect_ = aspect; near_ = near; far_ = far;
-	projection_ = glm::perspective( glm::radians( FOV_ ), aspect_, near_, far_);
+	FOV_rads_ = glm::radians(FOV); aspect_ = aspect; near_ = near; far_ = far;
+	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_);
 	updateProjectionView();
 }
 void Camera::setView( glm::vec3 position, glm::vec3 lookAt, glm::vec3 up) {
@@ -29,6 +29,9 @@ void Camera::setView( glm::vec3 position, glm::vec3 lookAt, glm::vec3 up) {
 }
 void Camera::resize( units::Pixel screenWidth, units::Pixel screenHeight ) {
 	screen_width_ = screenWidth; screen_height_ = screenHeight;
+	aspect_ = (float)(screen_width_) / screen_height_;
+	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_);
+	updateProjectionView();
 }
 glm::mat4 Camera::getProjection() const {
 	return projection_;

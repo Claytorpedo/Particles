@@ -16,13 +16,13 @@ class Camera {
 private:
 	glm::mat4 projection_, view_, projection_view_;
 	units::Pixel screen_width_, screen_height_;
-	float FOV_, aspect_, near_, far_;
+	float FOV_rads_, aspect_, near_, far_;
 
 	void updateProjectionView();
 public:
 	Camera(glm::vec3 position = glm::vec3(0,0,0), glm::vec3 lookAt = glm::vec3(0,0,-1), glm::vec3 up = glm::vec3(0,1,0), 
-		float FOV = constants::FOV, float aspect = constants::ASPECT, float near = constants::NEAR, float far = constants::FAR,
-		units::Pixel screenWidth = constants::SCREEN_WIDTH, units::Pixel screenHeight = constants::SCREEN_HEIGHT);
+		float FOV = constants::FOV, float aspect = constants::DEFAULT_ASPECT, float near = constants::NEAR, float far = constants::FAR,
+		units::Pixel screenWidth = constants::DEFAULT_SCREEN_WIDTH, units::Pixel screenHeight = constants::DEFAULT_SCREEN_HEIGHT);
 	~Camera() {}
 
 	void setProjection( float FOV, float aspect, float near, float far );

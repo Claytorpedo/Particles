@@ -19,11 +19,11 @@ namespace constants {
 	const MS			SECOND_DURATION = 1000;			// In miliseconds.
 	const MS			MAX_FRAME_TIME = 50;			// The maximum lengh one frame can last in MS.
 	const Coordinate	EPSILON = 0.00001f;				// A very small value, used to check if floats are "close enough" to zero.
-	const Pixel			SCREEN_WIDTH = 1280;
-	const Pixel			SCREEN_HEIGHT = 720;
+	const Pixel			DEFAULT_SCREEN_WIDTH = 1280;
+	const Pixel			DEFAULT_SCREEN_HEIGHT = 720;
 	// Camera projection.
 	const float			FOV = 50.0f;
-	const float			ASPECT = float(SCREEN_WIDTH)/float(SCREEN_HEIGHT);
+	const float			DEFAULT_ASPECT = float(DEFAULT_SCREEN_WIDTH)/float(DEFAULT_SCREEN_HEIGHT);
 	const float			NEAR = 0.1f;
 	const float			FAR = 100.0f;
 
@@ -43,7 +43,7 @@ namespace constants {
 
 	const unsigned int	DEFAULT_COHESIVENESS = 500;
 
-	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 11; // 2^10 = 1024 for over 1m particles.
+	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
 
 	const unsigned int MIN_PARTICLE_EXPONENT = 2;
 	/*

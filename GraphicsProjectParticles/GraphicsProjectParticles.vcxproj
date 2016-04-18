@@ -84,6 +84,7 @@
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="InputProcessor.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="Units.h" />
     <ClInclude Include="Vector2D.h" />

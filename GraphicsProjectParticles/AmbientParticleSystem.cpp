@@ -169,7 +169,7 @@ void AmbientParticleSystem::initParticleDrawing() {
 	// Return the viewport to its previous state.
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
 }
-void AmbientParticleSystem::update(units::MS elapsedTime, glm::vec3 gravityPos, const float gravityForce, const unsigned int cohesiveness) {
+void AmbientParticleSystem::update( const units::MS elapsedTime, const glm::vec4 gravity, const unsigned int cohesiveness) {
 	if ( is_paused_ ) {
 		return;
 	}
@@ -180,8 +180,7 @@ void AmbientParticleSystem::update(units::MS elapsedTime, glm::vec3 gravityPos, 
 	glUniform2f( update_uniform_ids_[update::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
 	glUniform1f( update_uniform_ids_[update::U_ELAPSED_TIME]->id, units::millisToSeconds(elapsedTime) );
 	glUniform1i( update_uniform_ids_[update::U_COHESIVENESS]->id, cohesiveness);
-	glUniform1f( update_uniform_ids_[update::U_K_FORCE]->id, gravityForce);
-	glUniform3f( update_uniform_ids_[update::U_INPUT_POS]->id, gravityPos.x, gravityPos.y, gravityPos.z );
+	glUniform4f( update_uniform_ids_[update::U_GRAVITY]->id, gravity.x, gravity.y, gravity.z, gravity.w);
 
 	std::vector<GLint> prevViewport = setWindowForUpdate();
 

@@ -32,7 +32,8 @@ bool Graphics::init() {
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	// Create the window.
 	window_ = SDL_CreateWindow(window_title_.c_str(), SDL_WINDOWPOS_UNDEFINED, 
-		SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL );
+		SDL_WINDOWPOS_UNDEFINED, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, 
+		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
 	if ( NULL == window_ ) {
 		std::cerr << "Error: the window could not be created. SDL Error: " << SDL_GetError() << std::endl;
 		return false;
@@ -68,7 +69,7 @@ void Graphics::setClearColour(float r, float g, float b, float a) {
 void Graphics::clear() {
 	glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
-void Graphics::setDrawWindow(units::Pixel x, units::Pixel y, units::Pixel w, units::Pixel h) {
+void Graphics::setViewport(units::Pixel x, units::Pixel y, units::Pixel w, units::Pixel h) {
 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
 	glViewport(x, y, w, h);
 }
