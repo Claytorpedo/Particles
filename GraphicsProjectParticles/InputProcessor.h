@@ -98,7 +98,7 @@ public:
 				int x, y;
 				SDL_GetMouseState( &x, &y );
 				Ray r = camera_->getRay(x, y);
-				glm::vec3 pos = r.position + 10.0f * r.direction;
+				glm::vec3 pos = r.position + 5.0f * r.direction;
 				gravity = glm::vec4( pos, gravity.w );
 				std::cout << "gravity position < x: " << gravity.x << " y: " << gravity.y << " z: " << gravity.z << " >" << std::endl;
 			}

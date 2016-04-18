@@ -64,12 +64,13 @@ bool getInput(Input *input, Graphics *graphics, Camera *camera) {
 int main (int argc, char* args[]) {
 	bool quit = false;
 	units::MS currentTime, previousTime, elapsedTime;
-	glm::vec4 gravity( -3, -3, -1, DEFAULT_GRAV_FORCE );
+	glm::vec4 gravity( -3, -3, 0, DEFAULT_GRAV_FORCE );
 	int pointSize = DEFAULT_POINT_SIZE;
 	int cohesiveness = DEFAULT_COHESIVENESS;
-	glm::vec3 pos(0,0,5);
-	glm::vec3 look(-0.35f,-0.35f,-1);
-	Camera camera(pos, pos + look, glm::vec3(0,1,0), FOV, DEFAULT_ASPECT, NEAR, FAR, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
+	glm::vec3 origin( 3.0f, 3.0f, 0.0f );
+	glm::vec3 position(0.0f, 0.0f, -5.0f);
+	glm::vec3 rotation(0.0f,0.0f,0.0f);
+	Camera camera(origin, position, rotation, FOV, DEFAULT_ASPECT, NEAR, FAR, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
 	Graphics graphics( WINDOW_TITLE, GL_MAJOR_VER, GL_MINOR_VER );
 	AmbientParticleSystem particleSystem( constants::DEFAULT_PARTICLE_EXPONENT );
 	Input input;
@@ -94,7 +95,6 @@ int main (int argc, char* args[]) {
 		}
 		inputProcessor.processInput( &input, &particleSystem, pointSize, cohesiveness, gravity );
 		// Update the scene.
-
 		currentTime = SDL_GetTicks();
 		elapsedTime = currentTime - previousTime;
 		elapsedTime = elapsedTime < MAX_FRAME_DUR ? elapsedTime : MAX_FRAME_DUR;
