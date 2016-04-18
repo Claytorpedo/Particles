@@ -23,7 +23,7 @@ AmbientParticleSystem* particleSystem = NULL;
 Camera *camera;
 glm::vec3 gravPos( -3, -3, -1 );
 unsigned int pointSize = DEFAULT_POINT_SIZE;
-unsigned int gravForce = DEFAULT_GRAV_FORCE;
+float gravForce = DEFAULT_GRAV_FORCE;
 unsigned int width = DEFAULT_PARTICLE_EXPONENT;
 unsigned int height = DEFAULT_PARTICLE_EXPONENT;
 
@@ -93,13 +93,17 @@ void processInput(Input *input, Graphics *graphics) {
 	// Check for change in gravity force.
 	if ( input->isKeyHeld( SDLK_g ) ) {
 		if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-			gravForce = gravForce > MIN_GRAV_FORCE ? gravForce - GRAV_FORCE_INCR : MIN_GRAV_FORCE;
+			float tmp = gravForce - GRAV_FORCE_SMALL_INCR;
+			gravForce = tmp > MIN_GRAV_FORCE ? tmp : MIN_GRAV_FORCE;
 		} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-			gravForce = gravForce < MAX_GRAV_FORCE ? gravForce + GRAV_FORCE_INCR : MAX_GRAV_FORCE;
+			float tmp = gravForce + GRAV_FORCE_SMALL_INCR;
+			gravForce = tmp < MAX_GRAV_FORCE ? tmp : MAX_GRAV_FORCE;
 		} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-			gravForce = MIN_GRAV_FORCE;
+			float tmp = gravForce - GRAV_FORCE_BIG_INCR;
+			gravForce = tmp > MIN_GRAV_FORCE ? tmp : MIN_GRAV_FORCE;
 		} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-			gravForce = MAX_GRAV_FORCE;
+			float tmp = gravForce + GRAV_FORCE_BIG_INCR;
+			gravForce = tmp < MAX_GRAV_FORCE ? tmp : MAX_GRAV_FORCE;
 		}
 	}
 	// Update mouse interactions.

@@ -3,10 +3,12 @@
 layout(location = 0) out vec4 position;
 layout(location = 1) out vec4 velocity;
 
-#define K_VEL_DECAY 0.99
+#define K_DECEL 0.99
+#define EPS 0.00001
 
 uniform vec2 uResolution;
 uniform float uElapsedTime;
+uniform int uCohesiveness; // Keeps the particles together. Higher number = less together.
 uniform vec3 uInputPos;
 uniform float uKForce;
 uniform sampler2D uTexPos;  // pos
@@ -18,15 +20,12 @@ void main() {
   vec3 pos = texture(uTexPos, uv).rgb;
   vec3 vel = texture(uTexVel, uv).rgb;
 
-  // compute force
-  vec3 toCenter = uInputPos - pos;
-  float toCenterLength = length(toCenter);
-  vec3 accel = (toCenter/toCenterLength) * uKForce / toCenterLength;
+  vec3 toGrav = uInputPos - pos;
+  float d2 = toGrav.x * toGrav.x + toGrav.y * toGrav.y + toGrav.z * toGrav.z;
+  vec3 accel = toGrav * uKForce / clamp((d2 == 0.0 ? EPS : d2), -uCohesiveness, uCohesiveness);
 
-  // update particle
-  // important, order matters
   pos += vel * uElapsedTime;
-  vel = K_VEL_DECAY * vel + accel * uElapsedTime;
+  vel = vel * K_DECEL + accel * uElapsedTime;
 
   // write out data
   position = vec4(pos, 1.0);

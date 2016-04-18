@@ -30,17 +30,20 @@ namespace constants {
 	const MS			SIXTY_FPS_FRAME_DUR = 17;
 	const MS			MAX_FRAME_DUR = SIXTY_FPS_FRAME_DUR * 2;
 	
-	const unsigned int	DEFAULT_GRAV_FORCE = 10;
-	const unsigned int	MIN_GRAV_FORCE = 1;
-	const unsigned int	MAX_GRAV_FORCE = 1000;
-	const unsigned int	GRAV_FORCE_INCR = 1;
+	const float	DEFAULT_GRAV_FORCE = 10;
+	const float	MIN_GRAV_FORCE = -10;
+	const float	MAX_GRAV_FORCE = 50;
+	const float	GRAV_FORCE_SMALL_INCR = 0.1f;
+	const float GRAV_FORCE_BIG_INCR = 1.0f;
 
 	const unsigned int	DEFAULT_POINT_SIZE = 1;
 	const unsigned int	MIN_POINT_SIZE = 1;
 	const unsigned int	MAX_POINT_SIZE = 20;
 	const unsigned int	POINT_SIZE_IRCR = 1;
 
-	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
+	const unsigned int	DEFAULT_COHESIVENESS = 500;
+
+	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 11; // 2^10 = 1024 for over 1m particles.
 
 	const unsigned int MIN_PARTICLE_EXPONENT = 2;
 	/*
