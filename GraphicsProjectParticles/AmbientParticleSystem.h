@@ -48,6 +48,7 @@ public:
 	bool init();
 	void update(units::MS elapsedTime, glm::vec3 gravityPos, const unsigned int gravityForce = 10 );
 	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
+	void togglePause() { is_paused_ = !is_paused_; }
 };
 
 namespace ambient_particle_system {

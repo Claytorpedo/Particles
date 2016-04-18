@@ -21,6 +21,7 @@ using namespace constants;
 
 AmbientParticleSystem* particleSystem = NULL;
 Camera *camera;
+glm::vec3 gravPos( -3, -3, -1 );
 unsigned int pointSize = DEFAULT_POINT_SIZE;
 unsigned int gravForce = DEFAULT_GRAV_FORCE;
 unsigned int width = DEFAULT_PARTICLE_EXPONENT;
@@ -74,6 +75,9 @@ void processInput(Input *input, Graphics *graphics) {
 			graphics->setClearColour(0,0,0,1);
 		}
 	}
+	if ( input->wasKeyPressed( SDLK_SPACE ) ) {
+		particleSystem->togglePause();
+	}
 	// Check for change in particle size.
 	if ( input->isKeyHeld( SDLK_p ) ) {
 		if ( input->wasKeyPressed( SDLK_DOWN ) ) {
@@ -98,16 +102,19 @@ void processInput(Input *input, Graphics *graphics) {
 			gravForce = MAX_GRAV_FORCE;
 		}
 	}
-
 	// Update mouse interactions.
 	
 	if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
-		
-		
+		// Pan and rotate camera. Zoom too?
 
 
-		int x, y;
-		SDL_GetMouseState( &x, &y );
+	} else {
+		if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
+			int x, y;
+			SDL_GetMouseState( &x, &y );
+			Ray r = camera->getRay(x, y);
+			gravPos = r.position + 10.0f * r.direction;
+		}
 	}
 }
 
@@ -116,14 +123,9 @@ int main (int argc, char* args[]) {
 	Input input;
 	units::MS currentTime, previousTime, elapsedTime;
 	Graphics graphics( WINDOW_TITLE, GL_MAJOR_VER, GL_MINOR_VER );
-	glm::vec3 pos = glm::vec3(0,0,5);
-	glm::vec3 look = glm::vec3(0,0,-1);
+	glm::vec3 pos(0,0,5);
+	glm::vec3 look(-0.35f,-0.35f,-1);
 	camera = new Camera(pos, pos + look, glm::vec3(0,1,0), FOV, ASPECT, NEAR, FAR, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	//glm::mat4 projection = glm::perspective(glm::radians(FOV), ASPECT, NEAR, FAR);
-	//glm::mat4 view = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0,0,-1), glm::vec3(0,1,0));
-	//glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, -2.5f, -2.0f));
-	//glm::mat4 PVM = projection * view * model;
 
 	if ( !graphics.init() ) {
 		std::cerr << "Error: failed to initialize graphics!" << std::endl;
@@ -138,22 +140,12 @@ int main (int argc, char* args[]) {
 		close();
 		return 1;
 	}
-	glm::vec3 gravPos( 2.0f, 2.0f, -1.0f );
-
 	previousTime = SDL_GetTicks();
 	while (!quit) {
 		if ( getInput(&input) || input.wasKeyPressed(SDLK_ESCAPE) ) {
 			break;
 		}
 		processInput(&input, &graphics);
-
-		if ( input.wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
-			int x, y;
-			SDL_GetMouseState( &x, &y );
-			Ray r = camera->getRay(x, y);
-			gravPos = r.position + 10.0f * r.direction;
-		}
-
 		// Update the scene.
 
 		currentTime = SDL_GetTicks();

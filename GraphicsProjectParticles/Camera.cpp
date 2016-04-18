@@ -59,7 +59,6 @@ Ray Camera::getRay(int x, int y) const {
 		glm::vec3 rayNorm = glm::normalize( ray );
 
 		// Get camera origin.
-		glm::vec4 o(0, 0, 0, 1);
 		glm::vec4 origin = viewInv * glm::vec4(0,0,0,1);
 
 		return Ray(glm::vec3(origin), rayNorm);
