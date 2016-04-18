@@ -47,6 +47,9 @@ AmbientParticleSystem::~AmbientParticleSystem() {
 }
 
 bool AmbientParticleSystem::initShaders() {
+	if ( init_shader_ )		{ delete init_shader_; }
+	if ( update_shader_ )	{ delete update_shader_; }
+	if ( draw_shader_ )		{ delete draw_shader_; }
 	init_shader_ = new ShaderProgram(AMB_PART_INIT_VERT_PATH, AMB_PART_INIT_FRAG_PATH);
 	if ( !init_shader_->load() ) {
 		std::cerr << "Failed to load particle initialization shader." << std::endl;
@@ -65,6 +68,8 @@ bool AmbientParticleSystem::initShaders() {
 	return true;
 }
 bool AmbientParticleSystem::initFramebuffers() {
+	if ( framebuffers_[0] ) { delete framebuffers_[0];}
+	if ( framebuffers_[1] ) { delete framebuffers_[1];}
 	framebuffers_[0] = new Framebuffer(particle_texture_width_, particle_texture_height_, NUM_TEXTURES_PER_FRAMEBUFFER);
 	framebuffers_[1] = new Framebuffer(particle_texture_width_, particle_texture_height_, NUM_TEXTURES_PER_FRAMEBUFFER);
 
@@ -83,15 +88,22 @@ void AmbientParticleSystem::getShaderUniformIDs(GLuint shaderProgramID, ShaderUn
 	}
 }
 void AmbientParticleSystem::getShaderAttributes() {
+	init_variable_ids_.clear();
+	update_variable_ids_.clear();
+	draw_variable_ids_.clear();
 	getShaderVariableIDs(init_shader_->getProgramID(), init_variable_ids_, init::VARIABLE_NAMES);
 	getShaderVariableIDs(update_shader_->getProgramID(), update_variable_ids_, update::VARIABLE_NAMES);
 	getShaderVariableIDs(draw_shader_->getProgramID(), draw_variable_ids_, draw::VARIABLE_NAMES);
 
+	init_uniform_ids_.clear();
+	update_uniform_ids_.clear(); 
+	draw_uniform_ids_.clear();
 	getShaderUniformIDs(init_shader_->getProgramID(), init_uniform_ids_, init::UNIFORM_NAMES);
 	getShaderUniformIDs(update_shader_->getProgramID(), update_uniform_ids_, update::UNIFORM_NAMES);
 	getShaderUniformIDs(draw_shader_->getProgramID(), draw_uniform_ids_, draw::UNIFORM_NAMES);
 }
 void AmbientParticleSystem::createQuadBuffer() {
+	if ( quad_buffer_ )	{ delete quad_buffer_; }
 	// Create quad for textures to draw onto.
 	static const GLfloat quad_array[] = {
 		-1.0f,	-1.0f,  0.0f,	
@@ -104,6 +116,7 @@ void AmbientParticleSystem::createQuadBuffer() {
 	quad_buffer_ = new VertexBuffer( 3, 6, quad_array );
 }
 void AmbientParticleSystem::createUVBuffer() {
+	if ( uv_buffer_ )	{ delete uv_buffer_; }
 	// Build the UV coordinate array for the given dimensions.
 	// This is what gives us the number of particles (it functions as the particle veretx data by indexing to uv coordinates).
 	unsigned int count = particle_texture_width_ * particle_texture_height_;
@@ -142,6 +155,20 @@ bool AmbientParticleSystem::init() {
 	createQuadBuffer();
 	createUVBuffer();
 	
+	initParticleDrawing();
+	return true;
+}
+bool AmbientParticleSystem::resize(unsigned int width_exponent, unsigned int height_exponent) {
+	particle_texture_width_ = units::getPowerOf2(width_exponent);
+	particle_texture_height_ = units::getPowerOf2(height_exponent);
+
+	// Create new framebuffer and uv buffer objects for the new size.
+	if ( !initFramebuffers() ) {
+		std::cerr << "Error: Failed to create framebuffers." << std::endl;
+		return false;
+	}
+	createUVBuffer();
+
 	initParticleDrawing();
 	return true;
 }

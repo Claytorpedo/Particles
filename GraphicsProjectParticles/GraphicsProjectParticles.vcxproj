@@ -87,7 +87,6 @@
     <ClInclude Include="InputProcessor.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="Units.h" />
-    <ClInclude Include="Vector2D.h" />
     <ClInclude Include="VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>

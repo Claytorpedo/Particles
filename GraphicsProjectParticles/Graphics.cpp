@@ -55,7 +55,7 @@ bool Graphics::init() {
 	if ( SDL_GL_SetSwapInterval(1) < 0 ) {
 		std::cerr << "Warning: VSync could not be enabled. SDL Error: " << SDL_GetError() << std::endl;
 	}
-
+	is_fullscreen_ = false;
 	// Initialize clear colour to black.
 	glClearColor(0,0,0,1);
 	glEnable( GL_BLEND );
@@ -72,6 +72,27 @@ void Graphics::clear() {
 void Graphics::setViewport(units::Pixel x, units::Pixel y, units::Pixel w, units::Pixel h) {
 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
 	glViewport(x, y, w, h);
+}
+void Graphics::setFullscreen() {
+	SDL_SetWindowFullscreen( window_, SDL_WINDOW_FULLSCREEN_DESKTOP );
+	is_fullscreen_ = true;
+}
+void Graphics::toggleFullscreen() {
+	if ( !is_fullscreen_ ) {
+		SDL_SetWindowFullscreen( window_, SDL_WINDOW_FULLSCREEN_DESKTOP );
+	} else {
+		SDL_SetWindowFullscreen( window_, SDL_FALSE );
+	}
+	is_fullscreen_ = !is_fullscreen_;
+}
+void Graphics::getWindowSize( int &w, int &h ) {
+	SDL_DisplayMode dm;
+	if ( SDL_GetDesktopDisplayMode( 0, &dm ) != 0 ) {
+		std::cerr << "SDL_GetDesktopDisplayMode failed: " << SDL_GetError() << std::endl;
+		return;
+	}
+	w = dm.w;
+	h = dm.h;
 }
 void Graphics::present() {
 	SDL_GL_SwapWindow( window_ );

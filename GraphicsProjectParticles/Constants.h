@@ -41,7 +41,11 @@ namespace constants {
 	const unsigned int	MAX_POINT_SIZE = 20;
 	const unsigned int	POINT_SIZE_IRCR = 1;
 
-	const unsigned int	DEFAULT_COHESIVENESS = 500;
+	const int	DEFAULT_COHESIVENESS = 500;
+	const int	MIN_COHESIVENESS = 1;
+	const int	MAX_COHESIVENESS = 5000;
+	const int	COHESIVENESS_SMALL_INCR = 10;
+	const int	COHESIVENESS_LARGE_INCR = 100;
 
 	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
 

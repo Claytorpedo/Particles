@@ -18,6 +18,9 @@ public:
 	void setClearColour(float r, float g, float b, float a);
 	void setViewport(units::Pixel x = 0, units::Pixel y = 0, 
 		units::Pixel w = constants::DEFAULT_SCREEN_WIDTH, units::Pixel h = constants::DEFAULT_SCREEN_HEIGHT);
+	void setFullscreen();
+	void toggleFullscreen();
+	void getWindowSize( int &w, int &h );
 	void clear();
 	void present();
 
@@ -27,6 +30,7 @@ private:
 	const std::string window_title_;
 	const int gl_major_ver_;
 	const int gl_minor_ver_;
+	bool is_fullscreen_;
 };
 
 

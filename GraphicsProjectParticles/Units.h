@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include "GL\glew.h"
-#include "Vector2D.h"
 
 namespace units {
 	typedef float			Coordinate;
@@ -27,8 +26,6 @@ namespace units {
 	inline float millisToSeconds( MS ms ) {
 		return float(ms) / 1000.0f; 
 	}
-
-	typedef Vector2D<Coordinate> Coordinate2D;
 }
 
 #endif // _UNITS_H_

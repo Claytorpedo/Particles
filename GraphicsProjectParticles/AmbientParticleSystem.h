@@ -47,6 +47,7 @@ public:
 	~AmbientParticleSystem();
 
 	bool init();
+	bool resize(unsigned int width_exponent, unsigned int height_exponent);
 	void update(const units::MS elapsedTime, const glm::vec4 gravity, const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
 	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
 	void togglePause() { is_paused_ = !is_paused_; }
