@@ -10,14 +10,17 @@
 #include "ShaderProgram.h"
 #include "AmbientParticleSystem.h"
 #include "Input.h"
+#include "Camera.h"
 
 #include "glm\glm.hpp"
 #include "glm\gtx\transform.hpp"
 #include "glm\gtc\matrix_transform.hpp"
+#include "glm\gtc\matrix_inverse.hpp"
 
 using namespace constants;
 
 AmbientParticleSystem* particleSystem = NULL;
+Camera *camera;
 unsigned int pointSize = DEFAULT_POINT_SIZE;
 unsigned int gravForce = DEFAULT_GRAV_FORCE;
 unsigned int width = DEFAULT_PARTICLE_EXPONENT;
@@ -39,6 +42,15 @@ bool getInput(Input *input) {
 			break;
 		case SDL_KEYUP:
 			input->keyUpEvent( e );
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			input->mouseDownEvent( e );
+			break;
+		case SDL_MOUSEBUTTONUP:
+			input->mouseUpEvent( e );
+			break;
+		case SDL_MOUSEWHEEL:
+			input->mouseWheelEvent( e );
 			break;
 		case SDL_QUIT:		// user closes window
 			return true;
@@ -87,6 +99,16 @@ void processInput(Input *input, Graphics *graphics) {
 		}
 	}
 
+	// Update mouse interactions.
+	
+	if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
+		
+		
+
+
+		int x, y;
+		SDL_GetMouseState( &x, &y );
+	}
 }
 
 int main (int argc, char* args[]) {
@@ -94,6 +116,14 @@ int main (int argc, char* args[]) {
 	Input input;
 	units::MS currentTime, previousTime, elapsedTime;
 	Graphics graphics( WINDOW_TITLE, GL_MAJOR_VER, GL_MINOR_VER );
+	glm::vec3 pos = glm::vec3(0,0,5);
+	glm::vec3 look = glm::vec3(0,0,-1);
+	camera = new Camera(pos, pos + look, glm::vec3(0,1,0), FOV, ASPECT, NEAR, FAR, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	//glm::mat4 projection = glm::perspective(glm::radians(FOV), ASPECT, NEAR, FAR);
+	//glm::mat4 view = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0,0,-1), glm::vec3(0,1,0));
+	//glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, -2.5f, -2.0f));
+	//glm::mat4 PVM = projection * view * model;
 
 	if ( !graphics.init() ) {
 		std::cerr << "Error: failed to initialize graphics!" << std::endl;
@@ -108,12 +138,6 @@ int main (int argc, char* args[]) {
 		close();
 		return 1;
 	}
-	// Get view projection.
-	glm::mat4 projection = glm::perspective(glm::radians(FOV), ASPECT, NEAR, FAR);
-	glm::mat4 view = glm::lookAt(glm::vec3(0,0,5), glm::vec3(0,0,0), glm::vec3(0,1,0));
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, -2.5f, -2.0f));
-	glm::mat4 PVM = projection * view * model;
-
 	glm::vec3 gravPos( 2.0f, 2.0f, -1.0f );
 
 	previousTime = SDL_GetTicks();
@@ -122,6 +146,12 @@ int main (int argc, char* args[]) {
 			break;
 		}
 		processInput(&input, &graphics);
+
+		if ( input.wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
+			int x, y;
+			SDL_GetMouseState( &x, &y );
+			gravPos = pos + 10.0f * camera->getRay(x,y);
+		}
 
 		// Update the scene.
 
@@ -135,7 +165,7 @@ int main (int argc, char* args[]) {
 
 		graphics.clear();
 
-		particleSystem->draw( PVM, pointSize );
+		particleSystem->draw( camera->getProjectionView(), pointSize );
 
 		graphics.present();
 	}

@@ -4,6 +4,8 @@
 void Input::newFrameClear() {
 	pressedKeys.clear();
 	releasedKeys.clear();
+	pressedMouseButtons.clear();
+	releasedMouseButtons.clear();
 }
 void Input::keyDownEvent( const SDL_Event& e) {
 	pressedKeys[e.key.keysym.sym] = true;
@@ -26,4 +28,38 @@ bool Input::wasKeyPressed(SDL_Keycode key) {
 // When trying to get a bool that doesn't exist, a map defaults to false.
 bool Input::wasKeyReleased(SDL_Keycode key) {
 	return releasedKeys[key];
+}
+
+
+void Input::mouseDownEvent( const SDL_Event& e) {
+	pressedMouseButtons[e.button.button] = true;
+	heldMouseButtons[e.button.button] = true;
+}
+void Input::mouseUpEvent( const SDL_Event& e) {
+	releasedMouseButtons[e.button.button] = true;
+	heldMouseButtons[e.button.button] = false;
+}
+
+// When trying to get a bool that doesn't exist, a map defaults to false.
+bool Input::isMouseButtonHeld(Uint8 button) {
+	return heldMouseButtons[button];
+}
+// When trying to get a bool that doesn't exist, a map defaults to false.
+bool Input::wasMouseButtonPressed(Uint8 button) {
+	return pressedMouseButtons[button];
+}
+// When trying to get a bool that doesn't exist, a map defaults to false.
+bool Input::wasMouseButtonReleased(Uint8 button) {
+	return releasedMouseButtons[button];
+}
+
+
+void Input::mouseWheelEvent(const SDL_Event& e) {
+	mouse_wheel_value_ += e.wheel.y;
+}
+int Input::mouseWheelValue() {
+	return mouse_wheel_value_;
+}
+void Input::resetMouseWheelValue() {
+	mouse_wheel_value_ = 0;
 }

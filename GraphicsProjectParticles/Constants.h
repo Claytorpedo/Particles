@@ -40,7 +40,7 @@ namespace constants {
 	const unsigned int	MAX_POINT_SIZE = 20;
 	const unsigned int	POINT_SIZE_IRCR = 1;
 
-	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 13; // 2^10 = 1024 for over 1m particles.
+	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
 
 	const unsigned int MIN_PARTICLE_EXPONENT = 2;
 	/*
