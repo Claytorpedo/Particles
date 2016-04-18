@@ -31,7 +31,8 @@ public:
 	glm::mat4 getProjection() const;
 	glm::mat4 getView() const;
 	glm::mat4 getProjectionView() const;
-	glm::vec3 getRay(int x, int y) const;
+	Ray getRay(int x, int y) const;
+	
 };
 
 #endif // _CAMERA_H

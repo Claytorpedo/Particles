@@ -150,7 +150,8 @@ int main (int argc, char* args[]) {
 		if ( input.wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
 			int x, y;
 			SDL_GetMouseState( &x, &y );
-			gravPos = pos + 10.0f * camera->getRay(x,y);
+			Ray r = camera->getRay(x, y);
+			gravPos = r.position + 10.0f * r.direction;
 		}
 
 		// Update the scene.

@@ -40,7 +40,7 @@ glm::mat4 Camera::getProjectionView() const {
 	return projection_view_;
 }
 
-glm::vec3 Camera::getRay(int x, int y) const {
+Ray Camera::getRay(int x, int y) const {
 		// Convert mouse coords to OpenGL coords.
 		float gl_x = (2.0f * x) / screen_width_ - 1.0f;
 		float gl_y = 1.0f - (2.0f * y) / screen_height_;
@@ -57,6 +57,11 @@ glm::vec3 Camera::getRay(int x, int y) const {
 		glm::vec4 ray4 = viewInv * eyeCoords;
 		glm::vec3 ray(ray4.x, ray4.y, ray4.z);
 		glm::vec3 rayNorm = glm::normalize( ray );
-		return rayNorm;
+
+		// Get camera origin.
+		glm::vec4 o(0, 0, 0, 1);
+		glm::vec4 origin = viewInv * glm::vec4(0,0,0,1);
+
+		return Ray(glm::vec3(origin), rayNorm);
 }
 
