@@ -2,6 +2,7 @@
 #define	_CAMERA_H
 
 #include "glm\glm.hpp"
+#include "glm\gtc\quaternion.hpp"
 #include "Constants.h"
 #include "Units.h"
 
@@ -18,7 +19,9 @@ private:
 	units::Pixel screen_width_, screen_height_;
 	float FOV_rads_, aspect_, near_, far_;
 
-	glm::vec3 rotation_, origin_, position_;
+	glm::vec3 initial_rotation_, origin_, initial_position_, position_;
+	glm::fquat rotation_;
+	float degrees_wide_, degrees_tall_; // Pixels per degree of rotation.
 
 	void updateProjectionView();
 public:
@@ -41,7 +44,8 @@ public:
 	void setProjection( float FOV, float aspect, float near, float far );
 	void setLookAt( glm::vec3 position, glm::vec3 lookAt, glm::vec3 up);
 	void resize( units::Pixel screenWidth, units::Pixel screenHeight );
-	void rotate( float pitch, float yaw);
+	void rotate( float mouse_x, float mouse_y);
+	void reset();
 	glm::mat4 getProjection() const;
 	glm::mat4 getView() const;
 	glm::mat4 getProjectionView() const;

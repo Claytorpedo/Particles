@@ -1,8 +1,10 @@
 #include "Camera.h"
 #include "Units.h"
+#include "Constants.h"
 
 #include "glm\glm.hpp"
 #include "glm\gtx\transform.hpp"
+#include "glm\gtc\quaternion.hpp"
 #include "glm\gtc\matrix_transform.hpp"
 #include "glm\gtx\rotate_vector.hpp"
 #include "glm\gtc\matrix_inverse.hpp"
@@ -10,13 +12,17 @@
 Camera::Camera(glm::vec3 origin, glm::vec3 position, glm::vec3 rotation, float FOV, float aspect, float near, float far,
 			   units::Pixel screenWidth, units::Pixel screenHeight) 
 			   : FOV_rads_(glm::radians(FOV)), aspect_(aspect), near_(near), far_(far), screen_width_(screenWidth), screen_height_(screenHeight),
-				origin_(origin), position_(position), rotation_(rotation) {
-		glm::mat4 rot = glm::rotate( glm::mat4(1.0f), rotation.x, glm::vec3(1.0f, 0.0f, 0.0f) );
-		rot = glm::rotate( rot, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f) );
-		rot = glm::rotate( rot, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f) );
-		view_ = glm::translate(glm::translate( glm::mat4(1.0f), position_ ), origin_) * rot;
-		projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_ );
-		updateProjectionView();
+				origin_(origin), initial_position_(position), initial_rotation_(rotation), rotation_(rotation), position_(position) 
+{
+	degrees_wide_ = screen_width_ / constants::SCREEN_DEGREES_WIDE;
+	degrees_tall_ = screen_height_ / constants::SCREEN_DEGREES_TALL;
+	
+	glm::mat4 rot = glm::rotate( glm::mat4(1.0f), initial_rotation_.x, glm::vec3(1.0f, 0.0f, 0.0f) );
+	rot = glm::rotate( rot, initial_rotation_.y, glm::vec3(0.0f, 1.0f, 0.0f) );
+	rot = glm::rotate( rot, initial_rotation_.z, glm::vec3(0.0f, 0.0f, 1.0f) );
+	view_ = glm::translate(glm::translate( glm::mat4(1.0f), initial_position_ ), origin_) * rot;
+	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_ );
+	updateProjectionView();
 }
 
 void Camera::updateProjectionView() {
@@ -34,15 +40,25 @@ void Camera::setLookAt( glm::vec3 position, glm::vec3 lookAt, glm::vec3 up) {
 }
 void Camera::resize( units::Pixel screenWidth, units::Pixel screenHeight ) {
 	screen_width_ = screenWidth; screen_height_ = screenHeight;
+	degrees_wide_ = screen_width_ / constants::SCREEN_DEGREES_WIDE;
+	degrees_tall_ = screen_height_ / constants::SCREEN_DEGREES_TALL;
 	aspect_ = (float)(screen_width_) / screen_height_;
 	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_);
 	updateProjectionView();
 }
-void Camera::rotate( float pitch, float yaw) {
-	view_ = glm::translate( view_, -origin_ );
-	view_ = glm::rotate( view_, pitch,	glm::vec3(1.0f, 0.0f, 0.0f) );
-	view_ = glm::rotate( view_, yaw,	glm::vec3(0.0f, 1.0f, 0.0f) );
-	view_ = glm::translate( view_, origin_ );
+void Camera::rotate( float mouse_x, float mouse_y) {
+	rotation_ = glm::fquat(glm::vec3(glm::radians(mouse_y / degrees_tall_), glm::radians(mouse_x / degrees_wide_), 0.0f)) * rotation_;
+	glm::mat4 rot = glm::mat4(1.0f) * glm::mat4_cast(rotation_);
+	view_ = glm::translate(glm::translate( glm::mat4(1.0f), position_ ) * rot,  origin_);
+	updateProjectionView();
+}
+void Camera::reset() {
+	rotation_ = glm::fquat(initial_rotation_);
+	glm::mat4 rot = glm::rotate( glm::mat4(1.0f), initial_rotation_.x, glm::vec3(1.0f, 0.0f, 0.0f) );
+	rot = glm::rotate( rot, initial_rotation_.y, glm::vec3(0.0f, 1.0f, 0.0f) );
+	rot = glm::rotate( rot, initial_rotation_.z, glm::vec3(0.0f, 0.0f, 1.0f) );
+	view_ = glm::translate(glm::translate( glm::mat4(1.0f), initial_position_ ), origin_) * rot;
+	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_ );
 	updateProjectionView();
 }
 glm::mat4 Camera::getProjection() const {

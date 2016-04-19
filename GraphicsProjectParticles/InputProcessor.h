@@ -20,12 +20,24 @@ inline void changeValues(T &val, T incr, T min, T max, std::string name, bool lo
 	val = tmp < min ? min : tmp > max ? max : tmp;
 	if (log) { std::cout << name << ": " << val << std::endl; }
 }
+template <typename T>
+inline void changeValuesByArrowKey(Input* input, T &val, T small_incr, T large_incr, T min, T max, std::string name, bool log = true ) {
+	if ( input->wasKeyPressed( SDLK_DOWN ) ) {
+		changeValues( val, -small_incr, min, max, name, log);
+	} else if ( input->wasKeyPressed( SDLK_UP ) ) {
+		changeValues( val, small_incr, min, max, name, log);
+	} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
+		changeValues( val, -large_incr, min, max, name, log);
+	} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
+		changeValues( val, large_incr, min, max, name, log);
+	}
+}
 
 class InputProcessor {
 private:
 	Graphics *graphics_;
 	Camera *camera_;
-
+	glm::vec2 prev_mouse_left_click_pos_;
 public:
 	InputProcessor(Graphics* graphics, Camera* camera) : graphics_(graphics), camera_(camera) {}
 	~InputProcessor() {}
@@ -43,15 +55,8 @@ public:
 				graphics_->setClearColour(0,0,0,1);
 			}
 		// Check for change in cohesiveness. Using c again here doesn't seem like it should cause slips.
-			if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-				changeValues( cohesiveness, -COHESIVENESS_SMALL_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
-			} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-				changeValues( cohesiveness, COHESIVENESS_SMALL_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
-			} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-				changeValues( cohesiveness, -COHESIVENESS_LARGE_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
-			} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-				changeValues( cohesiveness, COHESIVENESS_LARGE_INCR, MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
-			}
+			changeValuesByArrowKey( input, cohesiveness, COHESIVENESS_SMALL_INCR, COHESIVENESS_LARGE_INCR, 
+				MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
 		}
 		if ( input->wasKeyPressed( SDLK_SPACE ) ) {
 			particleSystem->togglePause();
@@ -67,31 +72,37 @@ public:
 		}
 		// Check for change in particle size.
 		if ( input->isKeyHeld( SDLK_p ) ) {
-			if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-				changeValues( pointSize, -POINT_SIZE_IRCR, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
-			} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-				changeValues( pointSize, POINT_SIZE_IRCR, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
-			} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-				changeValues( pointSize, -MAX_POINT_SIZE, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
-			} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-				changeValues( pointSize, MAX_POINT_SIZE, MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
-			}
+			changeValuesByArrowKey( input, pointSize, POINT_SIZE_IRCR, MAX_POINT_SIZE, 
+				MIN_POINT_SIZE, MAX_POINT_SIZE, "point size");
 		}
 		// Check for change in gravity force.
 		if ( input->isKeyHeld( SDLK_g ) ) {
-			if ( input->wasKeyPressed( SDLK_DOWN ) ) {
-				changeValues( gravity.w, -GRAV_FORCE_SMALL_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
-			} else if ( input->wasKeyPressed( SDLK_UP ) ) {
-				changeValues( gravity.w, +GRAV_FORCE_SMALL_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
-			} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
-				changeValues( gravity.w, -GRAV_FORCE_LARGE_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
-			} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
-				changeValues( gravity.w, GRAV_FORCE_LARGE_INCR, MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
-			}
+			changeValuesByArrowKey( input, gravity.w, GRAV_FORCE_SMALL_INCR, GRAV_FORCE_LARGE_INCR, 
+				MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
 		}
 		// Update mouse interactions.
 		if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
-			// Pan and rotate camera. Zoom too?
+			if ( input->wasKeyPressed( SDLK_r ) ) {
+				camera_->reset();
+			}
+			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
+				int x, y;
+				SDL_GetMouseState( &x, &y );
+				prev_mouse_left_click_pos_ = glm::vec2(x, y);
+			} else if ( input->isMouseButtonHeld( SDL_BUTTON_LEFT ) ) {
+				int x, y;
+				SDL_GetMouseState( &x, &y );
+				int delta_x = x - prev_mouse_left_click_pos_.x; // y-axis rotation.
+				int delta_y = y - prev_mouse_left_click_pos_.y; // x-axis rotation.
+				camera_->rotate( delta_x, delta_y );
+				prev_mouse_left_click_pos_.x = x;
+				prev_mouse_left_click_pos_.y = y;
+			}
+			if ( input->wasMouseButtonPressed( SDL_BUTTON_RIGHT ) ) {
+
+			} else if ( input->isMouseButtonHeld( SDL_BUTTON_RIGHT ) ) {
+
+			}
 
 		} else {
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {

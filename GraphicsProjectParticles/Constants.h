@@ -47,6 +47,10 @@ namespace constants {
 	const int	COHESIVENESS_SMALL_INCR = 10;
 	const int	COHESIVENESS_LARGE_INCR = 100;
 
+	// Number of rotational degrees moving the mouse from one side of the screen to the other translates to.
+	const float SCREEN_DEGREES_WIDE = 540.0f;
+	const float SCREEN_DEGREES_TALL = 540.0f;
+
 	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
 
 	const unsigned int MIN_PARTICLE_EXPONENT = 2;
