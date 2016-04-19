@@ -1,7 +1,7 @@
 #version 400 core
 
-layout(location = 0) out vec4 position;
-layout(location = 1) out vec4 velocity;
+layout(location = 0) out vec3 position;
+layout(location = 1) out vec3 velocity;
 
 uniform vec2 uResolution;
 
@@ -13,9 +13,6 @@ float rand(vec2 seed) {
 void main() {
   vec2 uv = gl_FragCoord.xy/uResolution.xy;
 
-  vec3 pos = vec3(uv.x, uv.y, rand(uv));
-  vec3 vel = vec3(-2.0, 0.0, 0.0);
-
-  position = vec4(pos, 1.0);
-  velocity = vec4(vel, 1.0);
+  position = vec3(uv.x, uv.y, rand(uv));
+  velocity = vec3(-2.5, -0.5, 0.0);
 }

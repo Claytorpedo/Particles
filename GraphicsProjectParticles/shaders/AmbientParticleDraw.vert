@@ -4,7 +4,6 @@ in vec2 inUV;
 
 uniform float uPointSize;
 uniform mat4 uPVM;
-uniform vec4 uColour;
 uniform sampler2D uTexPos;
 
 void main() {

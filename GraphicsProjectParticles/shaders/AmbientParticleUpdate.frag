@@ -1,17 +1,17 @@
 #version 400 core
 
-layout(location = 0) out vec4 position;
-layout(location = 1) out vec4 velocity;
+layout(location = 0) out vec3 position;
+layout(location = 1) out vec3 velocity;
 
 #define K_DECEL 0.99
-#define EPS 0.00001
+#define EPS 0.00001 // Keeps us from division by zero.
 
 uniform vec2 uResolution;
 uniform float uElapsedTime;
 uniform int uCohesiveness; // Keeps the particles together. Higher number = less together.
 uniform vec4 uGravity;
-uniform sampler2D uTexPos;  // pos
-uniform sampler2D uTexVel;  // vel
+uniform sampler2D uTexPos;
+uniform sampler2D uTexVel; 
 
 void main() {
   vec2 uv = gl_FragCoord.xy/uResolution.xy;
@@ -26,7 +26,6 @@ void main() {
   pos += vel * uElapsedTime;
   vel = vel * K_DECEL + accel * uElapsedTime;
 
-  // write out data
-  position = vec4(pos, 1.0);
-  velocity = vec4(vel, 1.0);
+  position = pos;
+  velocity = vel;
 }

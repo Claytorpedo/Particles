@@ -59,11 +59,9 @@ namespace constants {
 
 	2^12 in both dimensions is ~17 million particles. This requires a somewhat strong GPU.
 	Keep in mind that there are four textures (so if you have dimensions 2^10 x 2^10, you are creating 4x 1024x1024 textures).
-	These are RGBA 32 bit floating point textures, so if you use 2^12 in both dimensions (4k textures) that requires a full 1GB
-	of VRAM.
+	These are RGB 32 bit floating point textures, so if you use 2^12 in both dimensions (4k textures) that requires ~768MB of VRAM.
 
 	There will also be an exponentially longer initialization time as the CPU calculates UV coordinates for all of the particles.
-
 	*/
 	const unsigned int MAX_PARTICLE_EXPONENT = 12; 
 
