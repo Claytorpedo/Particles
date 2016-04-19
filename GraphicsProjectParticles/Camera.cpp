@@ -52,8 +52,17 @@ void Camera::rotate( float mouse_x, float mouse_y) {
 	view_ = glm::translate(glm::translate( glm::mat4(1.0f), position_ ) * rot,  origin_);
 	updateProjectionView();
 }
+void Camera::pan(float mouse_x, float mouse_y) {
+	position_ += glm::vec3( mouse_x * 0.01f, -mouse_y * 0.01f, 0.0f );
+	glm::mat4 rot = glm::mat4(1.0f) * glm::mat4_cast(rotation_);
+
+	//origin_ += glm::vec3( mouse_x, mouse_y, 0.0f );
+	view_ = glm::translate(glm::translate(glm::mat4(1.0f), position_) * rot, origin_);
+	updateProjectionView();
+}
 void Camera::reset() {
 	rotation_ = glm::fquat(initial_rotation_);
+	position_ = initial_position_;
 	glm::mat4 rot = glm::rotate( glm::mat4(1.0f), initial_rotation_.x, glm::vec3(1.0f, 0.0f, 0.0f) );
 	rot = glm::rotate( rot, initial_rotation_.y, glm::vec3(0.0f, 1.0f, 0.0f) );
 	rot = glm::rotate( rot, initial_rotation_.z, glm::vec3(0.0f, 0.0f, 1.0f) );

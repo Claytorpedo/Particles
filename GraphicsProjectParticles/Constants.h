@@ -51,7 +51,7 @@ namespace constants {
 	const float SCREEN_DEGREES_WIDE = 540.0f;
 	const float SCREEN_DEGREES_TALL = 540.0f;
 
-	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
+	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 9; // 2^10 = 1024 for over 1m particles.
 
 	const unsigned int MIN_PARTICLE_EXPONENT = 2;
 	/*

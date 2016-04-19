@@ -37,7 +37,7 @@ class InputProcessor {
 private:
 	Graphics *graphics_;
 	Camera *camera_;
-	glm::vec2 prev_mouse_left_click_pos_;
+	glm::vec2 prev_mouse_left_click_pos_, prev_mouse_right_click_pos_;
 public:
 	InputProcessor(Graphics* graphics, Camera* camera) : graphics_(graphics), camera_(camera) {}
 	~InputProcessor() {}
@@ -99,13 +99,21 @@ public:
 				prev_mouse_left_click_pos_.y = y;
 			}
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_RIGHT ) ) {
-
+				int x, y;
+				SDL_GetMouseState( &x, &y );
+				prev_mouse_right_click_pos_ = glm::vec2(x, y);
 			} else if ( input->isMouseButtonHeld( SDL_BUTTON_RIGHT ) ) {
-
+				int x, y;
+				SDL_GetMouseState( &x, &y );
+				int delta_x = x - prev_mouse_right_click_pos_.x; // y-axis rotation.
+				int delta_y = y - prev_mouse_right_click_pos_.y; // x-axis rotation.
+				camera_->pan( delta_x, delta_y );
+				prev_mouse_right_click_pos_.x = x;
+				prev_mouse_right_click_pos_.y = y;
 			}
 
 		} else {
-			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
+			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) || input->isMouseButtonHeld( SDL_BUTTON_LEFT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
 				Ray r = camera_->getRay(x, y);
