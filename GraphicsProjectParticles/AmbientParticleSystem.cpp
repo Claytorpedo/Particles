@@ -12,7 +12,6 @@
 
 using namespace ambient_particle_system;
 
-
 AmbientParticleSystem::AmbientParticleSystem(unsigned int dimen) :
 	particle_texture_width_(units::getPowerOf2(dimen)), particle_texture_height_(units::getPowerOf2(dimen)),
 	uv_buffer_(0), quad_buffer_(0), is_paused_(false),

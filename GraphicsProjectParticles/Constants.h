@@ -47,9 +47,20 @@ namespace constants {
 	const int	COHESIVENESS_SMALL_INCR = 10;
 	const int	COHESIVENESS_LARGE_INCR = 100;
 
+	const float	DEFAULT_ZOOM = -5.0f;
+	const float MIN_ZOOM = -40.0f;
+	const float MAX_ZOOM = -0.5f;
+	const float ZOOM_SMALL_INCR = 0.1f;
+	const float ZOOM_LARGE_INCR = 1.0f;
+
+	const float DEFAULT_GRAV_DEPTH = 5.0f;
+
 	// Number of rotational degrees moving the mouse from one side of the screen to the other translates to.
 	const float SCREEN_DEGREES_WIDE = 540.0f;
 	const float SCREEN_DEGREES_TALL = 540.0f;
+
+	const float PIXELS_TO_PAN = 0.01f;
+	const float SCROLL_TO_ZOOM = 0.1f;
 
 	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 9; // 2^10 = 1024 for over 1m particles.
 

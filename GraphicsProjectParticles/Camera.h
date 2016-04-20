@@ -23,6 +23,7 @@ private:
 	glm::fquat rotation_;
 	float degrees_wide_, degrees_tall_; // Pixels per degree of rotation.
 
+	void updateView();
 	void updateProjectionView();
 public:
 	/*
@@ -44,8 +45,10 @@ public:
 	void setProjection(float FOV, float aspect, float near, float far );
 	void setLookAt(glm::vec3 position, glm::vec3 lookAt, glm::vec3 up);
 	void resize(units::Pixel screenWidth, units::Pixel screenHeight );
-	void rotate(float mouse_x, float mouse_y);
-	void pan(float mouse_x, float mouse_y);
+	void rotate(float horizontalPixels, float verticalPixels);
+	void pan(float horizontalPixels, float verticalPixels);
+	void setZoom(float zoomAmount);
+	float getZoom();
 	void reset();
 	glm::mat4 getProjection() const;
 	glm::mat4 getView() const;

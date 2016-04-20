@@ -80,6 +80,12 @@ public:
 			changeValuesByArrowKey( input, gravity.w, GRAV_FORCE_SMALL_INCR, GRAV_FORCE_LARGE_INCR, 
 				MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
 		}
+		// Change zoom with keyboard.
+		if ( input->isKeyHeld( SDLK_z ) ) {
+			float zoom = camera_->getZoom();
+			changeValuesByArrowKey( input, zoom, ZOOM_SMALL_INCR, ZOOM_LARGE_INCR, MIN_ZOOM, MAX_ZOOM, "zoom");
+			camera_->setZoom(zoom);
+		}
 		// Update mouse interactions.
 		if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
 			if ( input->wasKeyPressed( SDLK_r ) ) {
@@ -105,25 +111,29 @@ public:
 			} else if ( input->isMouseButtonHeld( SDL_BUTTON_RIGHT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
-				int delta_x = x - prev_mouse_right_click_pos_.x; // y-axis rotation.
-				int delta_y = y - prev_mouse_right_click_pos_.y; // x-axis rotation.
+				int delta_x = x - prev_mouse_right_click_pos_.x;
+				int delta_y = y - prev_mouse_right_click_pos_.y;
 				camera_->pan( delta_x, delta_y );
 				prev_mouse_right_click_pos_.x = x;
 				prev_mouse_right_click_pos_.y = y;
 			}
-
 		} else {
-			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) || input->isMouseButtonHeld( SDL_BUTTON_LEFT ) ) {
+			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
 				Ray r = camera_->getRay(x, y);
 				glm::vec3 pos = r.position + 5.0f * r.direction;
 				gravity = glm::vec4( pos, gravity.w );
 				std::cout << "gravity position < x: " << gravity.x << " y: " << gravity.y << " z: " << gravity.z << " >" << std::endl;
+			} else if ( input->isMouseButtonHeld( SDL_BUTTON_LEFT ) ) {
+				int x, y;
+				SDL_GetMouseState( &x, &y );
+				Ray r = camera_->getRay(x, y);
+				glm::vec3 pos = r.position + 5.0f * r.direction;
+				gravity = glm::vec4( pos, gravity.w );
 			}
 		}
 	}
-
 };
 
 #endif // _INPUT_PROCESSOR_H

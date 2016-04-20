@@ -28,6 +28,11 @@ Camera::Camera(glm::vec3 origin, glm::vec3 position, glm::vec3 rotation, float F
 void Camera::updateProjectionView() {
 	projection_view_ = projection_ * view_;
 }
+void Camera::updateView() {
+	glm::mat4 rot = glm::mat4(1.0f) * glm::mat4_cast(rotation_);
+	view_ = glm::translate(glm::translate( glm::mat4(1.0f), position_ ) * rot,  origin_);
+	updateProjectionView();
+}
 
 void Camera::setProjection( float FOV, float aspect, float near, float far ) {
 	FOV_rads_ = glm::radians(FOV); aspect_ = aspect; near_ = near; far_ = far;
@@ -46,19 +51,21 @@ void Camera::resize( units::Pixel screenWidth, units::Pixel screenHeight ) {
 	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_);
 	updateProjectionView();
 }
-void Camera::rotate( float mouse_x, float mouse_y) {
-	rotation_ = glm::fquat(glm::vec3(glm::radians(mouse_y / degrees_tall_), glm::radians(mouse_x / degrees_wide_), 0.0f)) * rotation_;
-	glm::mat4 rot = glm::mat4(1.0f) * glm::mat4_cast(rotation_);
-	view_ = glm::translate(glm::translate( glm::mat4(1.0f), position_ ) * rot,  origin_);
-	updateProjectionView();
+void Camera::rotate( float horizontalPixels, float verticalPixels) {
+	rotation_ = glm::fquat(glm::vec3(glm::radians(verticalPixels / degrees_tall_), 
+						glm::radians(horizontalPixels / degrees_wide_), 0.0f)) * rotation_;
+	updateView();
 }
-void Camera::pan(float mouse_x, float mouse_y) {
-	position_ += glm::vec3( mouse_x * 0.01f, -mouse_y * 0.01f, 0.0f );
-	glm::mat4 rot = glm::mat4(1.0f) * glm::mat4_cast(rotation_);
-
-	//origin_ += glm::vec3( mouse_x, mouse_y, 0.0f );
-	view_ = glm::translate(glm::translate(glm::mat4(1.0f), position_) * rot, origin_);
-	updateProjectionView();
+void Camera::pan(float horizontalPixels, float verticalPixels) {
+	position_ += glm::vec3( horizontalPixels * constants::PIXELS_TO_PAN, -verticalPixels * constants::PIXELS_TO_PAN, 0.0f );
+	updateView();
+}
+void Camera::setZoom(float zoomAmount) {
+	position_.z = zoomAmount;
+	updateView();
+}
+float Camera::getZoom() {
+	return position_.z;
 }
 void Camera::reset() {
 	rotation_ = glm::fquat(initial_rotation_);

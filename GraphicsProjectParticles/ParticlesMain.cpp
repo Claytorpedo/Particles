@@ -14,9 +14,6 @@
 #include "Camera.h"
 
 #include "glm\glm.hpp"
-#include "glm\gtx\transform.hpp"
-#include "glm\gtc\matrix_transform.hpp"
-#include "glm\gtc\matrix_inverse.hpp"
 
 using namespace constants;
 
@@ -68,7 +65,7 @@ int main (int argc, char* args[]) {
 	int pointSize = DEFAULT_POINT_SIZE;
 	int cohesiveness = DEFAULT_COHESIVENESS;
 	glm::vec3 origin( 3.0f, 3.0f, 0.0f );
-	glm::vec3 position(0.0f, 0.0f, -5.0f);
+	glm::vec3 position(0.0f, 0.0f, DEFAULT_ZOOM);
 	glm::vec3 rotation(0.0f,0.0f,0.0f);
 	Camera camera(origin, position, rotation, FOV, DEFAULT_ASPECT, NEAR, FAR, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
 	Graphics graphics( WINDOW_TITLE, GL_MAJOR_VER, GL_MINOR_VER );
