@@ -42,15 +42,17 @@ private:
 	void swapFramebuffers();
 	std::vector<GLint> setWindowForUpdate();
 public:
-	AmbientParticleSystem(unsigned int dimentions_exponent);
-	AmbientParticleSystem(unsigned int width_exponent, unsigned int height_exponent);
+	AmbientParticleSystem(unsigned int dimensionsExponent);
+	AmbientParticleSystem(unsigned int widthExponent, unsigned int heightExponent);
 	~AmbientParticleSystem();
 
 	bool init();
-	bool resize(unsigned int width_exponent, unsigned int height_exponent);
+	bool resize(unsigned int dimensionsExponent);
+	bool resize(unsigned int widthExponent, unsigned int heightExponent);
 	void update(const units::MS elapsedTime, const glm::vec4 gravity, const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
 	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
 	void togglePause() { is_paused_ = !is_paused_; }
+	int getNumParticles() { return particle_texture_width_ * particle_texture_height_; }
 };
 
 namespace ambient_particle_system {

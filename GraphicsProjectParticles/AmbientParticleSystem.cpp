@@ -157,9 +157,12 @@ bool AmbientParticleSystem::init() {
 	initParticleDrawing();
 	return true;
 }
-bool AmbientParticleSystem::resize(unsigned int width_exponent, unsigned int height_exponent) {
-	particle_texture_width_ = units::getPowerOf2(width_exponent);
-	particle_texture_height_ = units::getPowerOf2(height_exponent);
+bool AmbientParticleSystem::resize(unsigned int dimensionsExponent) {
+	return resize(dimensionsExponent, dimensionsExponent);
+}
+bool AmbientParticleSystem::resize(unsigned int widthExponent, unsigned int heightExponent) {
+	particle_texture_width_ = units::getPowerOf2(widthExponent);
+	particle_texture_height_ = units::getPowerOf2(heightExponent);
 
 	// Create new framebuffer and uv buffer objects for the new size.
 	if ( !initFramebuffers() ) {

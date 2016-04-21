@@ -85,6 +85,7 @@ int main (int argc, char* args[]) {
 		close();
 		return 1;
 	}
+	std::cout << "Particle system initialized with " << particleSystem.getNumParticles() << " particles." << std::endl;
 	previousTime = SDL_GetTicks();
 	while (!quit) {
 		if ( getInput(&input, &graphics, &camera) || input.wasKeyPressed(SDLK_ESCAPE) ) {

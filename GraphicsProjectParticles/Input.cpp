@@ -6,6 +6,7 @@ void Input::newFrameClear() {
 	releasedKeys.clear();
 	pressedMouseButtons.clear();
 	releasedMouseButtons.clear();
+	mouse_wheel_value_ = 0;
 }
 void Input::keyDownEvent( const SDL_Event& e) {
 	pressedKeys[e.key.keysym.sym] = true;
@@ -57,9 +58,6 @@ bool Input::wasMouseButtonReleased(Uint8 button) {
 void Input::mouseWheelEvent(const SDL_Event& e) {
 	mouse_wheel_value_ += e.wheel.y;
 }
-int Input::mouseWheelValue() {
+int Input::getMouseWheelValue() {
 	return mouse_wheel_value_;
-}
-void Input::resetMouseWheelValue() {
-	mouse_wheel_value_ = 0;
 }

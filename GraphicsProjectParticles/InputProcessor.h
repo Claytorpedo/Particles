@@ -86,7 +86,8 @@ public:
 			changeValuesByArrowKey( input, zoom, ZOOM_SMALL_INCR, ZOOM_LARGE_INCR, MIN_ZOOM, MAX_ZOOM, "zoom");
 			camera_->setZoom(zoom);
 		}
-		// Update mouse interactions.
+		// Update mouse interactions. 
+		// If I want to mess with other mouse buttons here, I could set additional buttons to stand in for control.
 		if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
 			if ( input->wasKeyPressed( SDLK_r ) ) {
 				camera_->reset();
@@ -117,6 +118,15 @@ public:
 				prev_mouse_right_click_pos_.x = x;
 				prev_mouse_right_click_pos_.y = y;
 			}
+			// Update zoom.
+			float zoom = input->getMouseWheelValue();
+			if ( zoom != 0 ) {
+				zoom *= ZOOM_MOUSE_INCR;
+				zoom += camera_->getZoom();
+				zoom = zoom > MAX_ZOOM ? MAX_ZOOM : zoom < MIN_ZOOM ? MIN_ZOOM : zoom;
+				camera_->setZoom( zoom );
+			}
+
 		} else {
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
 				int x, y;
@@ -132,6 +142,14 @@ public:
 				glm::vec3 pos = r.position + 5.0f * r.direction;
 				gravity = glm::vec4( pos, gravity.w );
 			}
+			// Scroll here changes how far back to place the grav object. Affects the 5.0f value above.
+
+			// This will be easier to do sensibly if I make some visualization when moving grav objects.
+			// Maybe make a somewhat transparent sphere that fades away a bit after moving
+
+			// That provides a bit of a depth cue, but still not a great one.
+			// This is also a bit of a work-intensive extra to implement.
+
 		}
 	}
 };

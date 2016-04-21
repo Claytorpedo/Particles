@@ -38,8 +38,7 @@ public:
 	bool wasMouseButtonReleased(Uint8 button);
 
 	void mouseWheelEvent(const SDL_Event& e);
-	int  mouseWheelValue();
-	void resetMouseWheelValue();
+	int  getMouseWheelValue();
 };
 
 

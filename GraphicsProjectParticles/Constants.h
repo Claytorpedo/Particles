@@ -52,6 +52,8 @@ namespace constants {
 	const float MAX_ZOOM = -0.5f;
 	const float ZOOM_SMALL_INCR = 0.1f;
 	const float ZOOM_LARGE_INCR = 1.0f;
+	const float ZOOM_MOUSE_INCR = 0.25f;
+	
 
 	const float DEFAULT_GRAV_DEPTH = 5.0f;
 
@@ -62,7 +64,7 @@ namespace constants {
 	const float PIXELS_TO_PAN = 0.01f;
 	const float SCROLL_TO_ZOOM = 0.1f;
 
-	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 9; // 2^10 = 1024 for over 1m particles.
+	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
 
 	const unsigned int MIN_PARTICLE_EXPONENT = 2;
 	/*
