@@ -54,8 +54,12 @@ namespace constants {
 	const float ZOOM_LARGE_INCR = 1.0f;
 	const float ZOOM_MOUSE_INCR = 0.25f;
 	
-
-	const float DEFAULT_GRAV_DEPTH = 5.0f;
+	const float DEFAULT_GRAV_DIST = 5.0f;
+	const float MIN_GRAV_DIST = 1.0f;
+	const float MAX_GRAV_DIST = 50.0f;
+	const float GRAV_DIST_SMALL_INCR = 0.1f;
+	const float GRAV_DIST_LARGE_INCR = 1.0f;
+	const float GRAV_DIST_MOUSE_INCR = 0.25f;
 
 	// Number of rotational degrees moving the mouse from one side of the screen to the other translates to.
 	const float SCREEN_DEGREES_WIDE = 540.0f;

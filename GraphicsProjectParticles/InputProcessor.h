@@ -38,8 +38,10 @@ private:
 	Graphics *graphics_;
 	Camera *camera_;
 	glm::vec2 prev_mouse_left_click_pos_, prev_mouse_right_click_pos_;
+	float gravity_dist_;
 public:
-	InputProcessor(Graphics* graphics, Camera* camera) : graphics_(graphics), camera_(camera) {}
+	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST) 
+		: graphics_(graphics), camera_(camera), gravity_dist_(gravDist) {}
 	~InputProcessor() {}
 
 	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness, glm::vec4 &gravity) {
@@ -87,11 +89,11 @@ public:
 			camera_->setZoom(zoom);
 		}
 		// Update mouse interactions. 
-		// If I want to mess with other mouse buttons here, I could set additional buttons to stand in for control.
 		if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
 			if ( input->wasKeyPressed( SDLK_r ) ) {
 				camera_->reset();
 			}
+			// Update rotation.
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
@@ -105,6 +107,7 @@ public:
 				prev_mouse_left_click_pos_.x = x;
 				prev_mouse_left_click_pos_.y = y;
 			}
+			// Update pan.
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_RIGHT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
@@ -122,34 +125,36 @@ public:
 			float zoom = input->getMouseWheelValue();
 			if ( zoom != 0 ) {
 				zoom *= ZOOM_MOUSE_INCR;
+				// Sync gravity object distance with zoom (this seems more intuitive).
+				float dist = gravity_dist_ - zoom;
+				gravity_dist_ = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
 				zoom += camera_->getZoom();
 				zoom = zoom > MAX_ZOOM ? MAX_ZOOM : zoom < MIN_ZOOM ? MIN_ZOOM : zoom;
 				camera_->setZoom( zoom );
 			}
 
-		} else {
+		} else { // Control is not held. Mouse actions effect gravity object placement.
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
 				Ray r = camera_->getRay(x, y);
-				glm::vec3 pos = r.position + 5.0f * r.direction;
+				glm::vec3 pos = r.position + gravity_dist_ * r.direction;
 				gravity = glm::vec4( pos, gravity.w );
 				std::cout << "gravity position < x: " << gravity.x << " y: " << gravity.y << " z: " << gravity.z << " >" << std::endl;
 			} else if ( input->isMouseButtonHeld( SDL_BUTTON_LEFT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
 				Ray r = camera_->getRay(x, y);
-				glm::vec3 pos = r.position + 5.0f * r.direction;
+				glm::vec3 pos = r.position + gravity_dist_ * r.direction;
 				gravity = glm::vec4( pos, gravity.w );
 			}
-			// Scroll here changes how far back to place the grav object. Affects the 5.0f value above.
-
-			// This will be easier to do sensibly if I make some visualization when moving grav objects.
-			// Maybe make a somewhat transparent sphere that fades away a bit after moving
-
-			// That provides a bit of a depth cue, but still not a great one.
-			// This is also a bit of a work-intensive extra to implement.
-
+			// Update gravity object distance from camera.
+			float dist = input->getMouseWheelValue();
+			if ( dist != 0 ) {
+				dist *= GRAV_DIST_MOUSE_INCR;
+				dist += gravity_dist_;
+				gravity_dist_ = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
+			}
 		}
 	}
 };

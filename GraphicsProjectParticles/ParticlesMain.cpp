@@ -119,18 +119,6 @@ int main (int argc, char* args[]) {
 				The small particles bounce off of these ones
 				If a larger one hits a larger one, they explode like fireworks or something.
 
-
-
-This if I want to texture things maybe? :
-"""
-In core OpenGL 3.2 and above, geometry shaders are available for use. To give a brief overview, you would only tell OpenGL to 
-draw the points that represent the positions of your particles, and these points would pass through the vertex shader normally,
-but then when they get to the geometry shader, it constructs the rectangle (out of two tris) by emitting vertices to the next 
-stage of the pipeline. Along with the vertices you can programmatically generate normals and texture coordinates.
-
-Since this is all done in hardware, I'm pretty sure it's the fastest way right now to render point-sprite particles.
-"""
-
 https://www.packtpub.com/books/content/basics-glsl-40-shaders
 Passing arrays or structures to a function
 
