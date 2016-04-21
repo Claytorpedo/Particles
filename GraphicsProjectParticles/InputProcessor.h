@@ -51,9 +51,10 @@ private:
 	glm::vec2 prev_mouse_left_click_pos_, prev_mouse_right_click_pos_;
 	float gravity_dist_;
 	int width_, height_;
+	float particle_alpha_;
 public:
-	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST) 
-		: graphics_(graphics), camera_(camera), gravity_dist_(gravDist), width_(0), height_(0) {}
+	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST, float particleAlpha = DEFAULT_ALPHA ) 
+		: graphics_(graphics), camera_(camera), gravity_dist_(gravDist), particle_alpha_(particleAlpha), width_(0), height_(0) {}
 	~InputProcessor() {}
 
 	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness, glm::vec4 &gravity) {
@@ -107,6 +108,11 @@ public:
 			changeValuesByArrowKey( input, cohesiveness, COHESIVENESS_SMALL_INCR, COHESIVENESS_LARGE_INCR, 
 				MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
 		}
+		// Change particle alpha value.
+		if ( input->isKeyHeld( SDLK_a ) ) {
+			changeValuesByArrowKey( input, particle_alpha_, ALPHA_SMALL_INCR, ALPHA_LARGE_INCR, MIN_ALPHA, MAX_ALPHA, "alpha");
+			particleSystem->setParticleAlpha( particle_alpha_ );
+		}
 		// Check for change in particle size.
 		if ( input->isKeyHeld( SDLK_p ) ) {
 			changeValuesByArrowKey( input, pointSize, POINT_SIZE_IRCR, MAX_POINT_SIZE, 
@@ -123,6 +129,29 @@ public:
 			changeValuesByArrowKey( input, zoom, ZOOM_SMALL_INCR, ZOOM_LARGE_INCR, MIN_ZOOM, MAX_ZOOM, "zoom");
 			camera_->setZoom(zoom);
 		}
+		// Change particle colour with keypad keys.
+		if ( input->wasKeyPressed( SDLK_KP_0 ) ) {
+			particleSystem->setParticleColourNoAlpha( ORANGE );
+		} else if ( input->wasKeyPressed( SDLK_KP_1 ) ) {
+			particleSystem->setParticleColourNoAlpha( CYAN );
+		} else if ( input->wasKeyPressed( SDLK_KP_2 ) ) {
+			particleSystem->setParticleColourNoAlpha( VIOLET );
+		} else if ( input->wasKeyPressed( SDLK_KP_3 ) ) {
+			particleSystem->setParticleColourNoAlpha( INDIGO );
+		} else if ( input->wasKeyPressed( SDLK_KP_4 ) ) {
+			particleSystem->setParticleColourNoAlpha( OLIVE );
+		} else if ( input->wasKeyPressed( SDLK_KP_5 ) ) {
+			particleSystem->setParticleColourNoAlpha( YELLOW );
+		} else if ( input->wasKeyPressed( SDLK_KP_6 ) ) {
+			particleSystem->setParticleColourNoAlpha( BLUE );
+		} else if ( input->wasKeyPressed( SDLK_KP_7 ) ) {
+			particleSystem->setParticleColourNoAlpha( RED );
+		} else if ( input->wasKeyPressed( SDLK_KP_8 ) ) {
+			particleSystem->setParticleColourNoAlpha( GREEN );
+		} else if ( input->wasKeyPressed( SDLK_KP_9 ) ) {
+			particleSystem->setParticleColourNoAlpha( WHITE );
+		}
+
 		// Update mouse interactions. 
 		if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
 			if ( input->wasKeyPressed( SDLK_r ) ) {
@@ -167,7 +196,6 @@ public:
 				zoom = zoom > MAX_ZOOM ? MAX_ZOOM : zoom < MIN_ZOOM ? MIN_ZOOM : zoom;
 				camera_->setZoom( zoom );
 			}
-
 		} else { // Control is not held. Mouse actions effect gravity object placement.
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
 				int x, y;

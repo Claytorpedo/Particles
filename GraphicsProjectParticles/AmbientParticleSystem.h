@@ -19,6 +19,7 @@ private:
 	VertexBuffer *uv_buffer_, *quad_buffer_;
 	ShaderProgram *init_shader_, *update_shader_, *draw_shader_;
 	Framebuffer *framebuffers_[2];
+	glm::vec4 colour_;
 
 	struct IDPair {
 		const GLint id;
@@ -42,8 +43,8 @@ private:
 	void swapFramebuffers();
 	std::vector<GLint> setWindowForUpdate();
 public:
-	AmbientParticleSystem(unsigned int dimensions);
-	AmbientParticleSystem(unsigned int width, unsigned int height);
+	AmbientParticleSystem(unsigned int dimensions, glm::vec4 pointColour);
+	AmbientParticleSystem(unsigned int width, unsigned int height, glm::vec4 pointColour);
 	~AmbientParticleSystem();
 
 	bool init();
@@ -52,6 +53,9 @@ public:
 	void update(const units::MS elapsedTime, const glm::vec4 gravity, const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
 	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
 	void togglePause() { is_paused_ = !is_paused_; }
+	void setParticleColour(glm::vec4 colour);
+	void setParticleColourNoAlpha(glm::vec3 colour);
+	void setParticleAlpha(float alpha);
 	unsigned int getWidth() { return particle_texture_width_; }
 	unsigned int getHeight() { return particle_texture_height_; }
 	unsigned int getNumParticles() { return particle_texture_width_ * particle_texture_height_; }

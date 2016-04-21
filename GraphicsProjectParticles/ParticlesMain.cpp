@@ -69,7 +69,7 @@ int main (int argc, char* args[]) {
 	glm::vec3 rotation(0.0f,0.0f,0.0f);
 	Camera camera(origin, position, rotation, FOV, DEFAULT_ASPECT, NEAR, FAR, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
 	Graphics graphics( WINDOW_TITLE, GL_MAJOR_VER, GL_MINOR_VER );
-	AmbientParticleSystem particleSystem( DEFAULT_PARTICLE_DIMENSIONS );
+	AmbientParticleSystem particleSystem( DEFAULT_PARTICLE_DIMENSIONS, glm::vec4(ORANGE, DEFAULT_ALPHA) );
 	Input input;
 	InputProcessor inputProcessor( &graphics, &camera );
 
@@ -111,8 +111,6 @@ int main (int argc, char* args[]) {
 	return 0;
 }
 /*
-
-RESIZEABLE PARTICLE COUNT
 
 SOME KIND OF DEPTH VISUALIZATION
 

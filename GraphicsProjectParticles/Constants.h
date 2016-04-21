@@ -80,7 +80,22 @@ namespace constants {
 	const unsigned int MAX_PARTICLES = units::getPowerOf2(24);
 	const int PARTICLE_INCR = 32;
 
-	const glm::vec4		GOLD( 0.9f, 0.3f, 0.1f, 0.6f );
+	const float DEFAULT_ALPHA = 0.6f;
+	const float MIN_ALPHA = 0.01f;
+	const float MAX_ALPHA = 1.0f;
+	const float ALPHA_SMALL_INCR = 0.01f;
+	const float ALPHA_LARGE_INCR = 0.1f;
+
+	const glm::vec3 ORANGE( 0.95f, 0.27f, 0.06f );
+	const glm::vec3	CYAN( 0.1f, 0.8f, 0.8f );
+	const glm::vec3	VIOLET( 0.8f, 0.2f, 0.8f );
+	const glm::vec3 INDIGO( 0.3f, 0.05f, 0.5f );
+	const glm::vec3 OLIVE( 0.6f, 0.9f, 0.15f );
+	const glm::vec3 YELLOW( 0.85f, 0.85f, 0.08f );
+	const glm::vec3 BLUE( 0.1f, 0.1f, 0.9f );
+	const glm::vec3 RED( 0.9f, 0.1f, 0.1f );
+	const glm::vec3 GREEN( 0.1f, 0.9f, 0.1f);
+	const glm::vec3 WHITE( 0.5f, 0.5f, 0.5f );
 
 	// Shader file paths from the main directory.
 	const char* const BASIC_SHADER_VERT_PATH = "shaders/testShader.vert"; 

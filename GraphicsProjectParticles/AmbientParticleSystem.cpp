@@ -12,16 +12,16 @@
 
 using namespace ambient_particle_system;
 
-AmbientParticleSystem::AmbientParticleSystem(unsigned int dimensions) :
-	particle_texture_width_(dimensions), particle_texture_height_(dimensions),
+AmbientParticleSystem::AmbientParticleSystem(unsigned int dimensions, glm::vec4 pointColour) :
+	particle_texture_width_(dimensions), particle_texture_height_(dimensions), colour_(pointColour),
 	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
 	init_shader_(0), update_shader_(0), draw_shader_(0)
 {
 	framebuffers_[0] = 0;
 	framebuffers_[1] = 0;
 }
-AmbientParticleSystem::AmbientParticleSystem(unsigned int width, unsigned int height) :
-	particle_texture_width_(width), particle_texture_height_(height), 
+AmbientParticleSystem::AmbientParticleSystem(unsigned int width, unsigned int height, glm::vec4 pointColour) :
+	particle_texture_width_(width), particle_texture_height_(height), colour_(pointColour),
 	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
 	init_shader_(0), update_shader_(0), draw_shader_(0)
 {
@@ -265,7 +265,7 @@ void AmbientParticleSystem::draw( const glm::mat4 &PVM, const unsigned int point
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE ); 
 	
 	glUniformMatrix4fv( draw_uniform_ids_[draw::U_PVM]->id, 1, GL_FALSE, &PVM[0][0] );
-	glUniform4f( draw_uniform_ids_[draw::U_COLOUR]->id, 0.9f, 0.3f, 0.1f, 0.6f);
+	glUniform4f( draw_uniform_ids_[draw::U_COLOUR]->id, colour_.r, colour_.g, colour_.b, colour_.a);
 	glUniform1f( draw_uniform_ids_[draw::U_POINT_SIZE]->id, pointSize);
 
 	// Bind our textures.
@@ -288,4 +288,14 @@ void AmbientParticleSystem::draw( const glm::mat4 &PVM, const unsigned int point
 	framebuffers_[0]->unbindTextures();
 	uv_buffer_->unbind();
 	draw_shader_->stopUsing();
+}
+
+void AmbientParticleSystem::setParticleColour(glm::vec4 colour) {
+	colour_ = colour;
+}
+void AmbientParticleSystem::setParticleColourNoAlpha(glm::vec3 colour) {
+	colour_ = glm::vec4(colour, colour_.a);
+}
+void AmbientParticleSystem::setParticleAlpha(float alpha) {
+	colour_.a = alpha;
 }
