@@ -69,7 +69,7 @@ int main (int argc, char* args[]) {
 	glm::vec3 rotation(0.0f,0.0f,0.0f);
 	Camera camera(origin, position, rotation, FOV, DEFAULT_ASPECT, NEAR, FAR, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
 	Graphics graphics( WINDOW_TITLE, GL_MAJOR_VER, GL_MINOR_VER );
-	AmbientParticleSystem particleSystem( constants::DEFAULT_PARTICLE_EXPONENT );
+	AmbientParticleSystem particleSystem( DEFAULT_PARTICLE_DIMENSIONS );
 	Input input;
 	InputProcessor inputProcessor( &graphics, &camera );
 
@@ -111,6 +111,16 @@ int main (int argc, char* args[]) {
 	return 0;
 }
 /*
+
+RESIZEABLE PARTICLE COUNT
+
+SOME KIND OF DEPTH VISUALIZATION
+
+MULTIPLE GRAV OBJECTS
+
+
+
+
 	Ideas: Make my bajillion particles
 			Make it so that they gravitate towards a 3D mouse position
 			Make variable gravity and such.

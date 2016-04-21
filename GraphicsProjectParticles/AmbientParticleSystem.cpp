@@ -12,8 +12,8 @@
 
 using namespace ambient_particle_system;
 
-AmbientParticleSystem::AmbientParticleSystem(unsigned int dimen) :
-	particle_texture_width_(units::getPowerOf2(dimen)), particle_texture_height_(units::getPowerOf2(dimen)),
+AmbientParticleSystem::AmbientParticleSystem(unsigned int dimensions) :
+	particle_texture_width_(dimensions), particle_texture_height_(dimensions),
 	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
 	init_shader_(0), update_shader_(0), draw_shader_(0)
 {
@@ -21,7 +21,7 @@ AmbientParticleSystem::AmbientParticleSystem(unsigned int dimen) :
 	framebuffers_[1] = 0;
 }
 AmbientParticleSystem::AmbientParticleSystem(unsigned int width, unsigned int height) :
-	particle_texture_width_(units::getPowerOf2(width)), particle_texture_height_(units::getPowerOf2(height)), 
+	particle_texture_width_(width), particle_texture_height_(height), 
 	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
 	init_shader_(0), update_shader_(0), draw_shader_(0)
 {
@@ -157,12 +157,12 @@ bool AmbientParticleSystem::init() {
 	initParticleDrawing();
 	return true;
 }
-bool AmbientParticleSystem::resize(unsigned int dimensionsExponent) {
-	return resize(dimensionsExponent, dimensionsExponent);
+bool AmbientParticleSystem::resize(unsigned int dimensions) {
+	return resize(dimensions, dimensions);
 }
-bool AmbientParticleSystem::resize(unsigned int widthExponent, unsigned int heightExponent) {
-	particle_texture_width_ = units::getPowerOf2(widthExponent);
-	particle_texture_height_ = units::getPowerOf2(heightExponent);
+bool AmbientParticleSystem::resize(unsigned int width, unsigned int height) {
+	particle_texture_width_ = width;
+	particle_texture_height_ = height;
 
 	// Create new framebuffer and uv buffer objects for the new size.
 	if ( !initFramebuffers() ) {

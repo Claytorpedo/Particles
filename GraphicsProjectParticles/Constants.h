@@ -68,19 +68,17 @@ namespace constants {
 	const float PIXELS_TO_PAN = 0.01f;
 	const float SCROLL_TO_ZOOM = 0.1f;
 
-	const unsigned int	DEFAULT_PARTICLE_EXPONENT = 10; // 2^10 = 1024 for over 1m particles.
-
-	const unsigned int MIN_PARTICLE_EXPONENT = 2;
+	const unsigned int	DEFAULT_PARTICLE_DIMENSIONS = units::getPowerOf2(10); // 2^10 = 1024 for over 1m particles.
 	/*
-	A note of the maximum particle exponent value:
+	A note of the particle maximum:
 
-	2^12 in both dimensions is ~17 million particles. This requires a somewhat strong GPU.
-	Keep in mind that there are four textures (so if you have dimensions 2^10 x 2^10, you are creating 4x 1024x1024 textures).
-	These are RGB 32 bit floating point textures, so if you use 2^12 in both dimensions (4k textures) that requires ~768MB of VRAM.
+	2^24 is ~17 million particles. This requires a somewhat strong GPU.
+	Keep in mind that there are four RGB 32 bit floating point textures, so if you have 2^24 particles (4k textures) that requires 768MB of VRAM.
 
-	There will also be an exponentially longer initialization time as the CPU calculates UV coordinates for all of the particles.
+	There will also be an long initialization times as the CPU calculates the UV coordinates for all of the particles.
 	*/
-	const unsigned int MAX_PARTICLE_EXPONENT = 12; 
+	const unsigned int MAX_PARTICLES = units::getPowerOf2(24);
+	const int PARTICLE_INCR = 32;
 
 	const glm::vec4		GOLD( 0.9f, 0.3f, 0.1f, 0.6f );
 

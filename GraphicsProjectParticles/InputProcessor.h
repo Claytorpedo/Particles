@@ -32,6 +32,17 @@ inline void changeValuesByArrowKey(Input* input, T &val, T small_incr, T large_i
 		changeValues( val, large_incr, min, max, name, log);
 	}
 }
+inline void changeParticleDimension(int &dimenAdjust, int dimenCurrent, int otherDimen, int incr, int max, bool isWidth = true, bool log = true) {
+	int tmp = dimenAdjust + incr;
+	int dimen = tmp + dimenCurrent;
+	dimenAdjust = dimen < 1 ? (1 - dimenCurrent) : dimen * otherDimen > max ? (max / otherDimen) - dimenCurrent : tmp;
+	if (log) {
+		int w = isWidth ? dimenAdjust + dimenCurrent : otherDimen;
+		int h = isWidth ? otherDimen : dimenAdjust + dimenCurrent;
+		std::cout << "Particle system set to: " << w << "x" << h << ".";
+		std::cout << " Press Enter to resize particle system with " << w * h << " particles." << std::endl;
+	}
+}
 
 class InputProcessor {
 private:
@@ -39,12 +50,48 @@ private:
 	Camera *camera_;
 	glm::vec2 prev_mouse_left_click_pos_, prev_mouse_right_click_pos_;
 	float gravity_dist_;
+	int width_, height_;
 public:
 	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST) 
-		: graphics_(graphics), camera_(camera), gravity_dist_(gravDist) {}
+		: graphics_(graphics), camera_(camera), gravity_dist_(gravDist), width_(0), height_(0) {}
 	~InputProcessor() {}
 
 	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness, glm::vec4 &gravity) {
+		if ( input->wasKeyPressed( SDLK_SPACE ) ) {
+			particleSystem->togglePause();
+		}
+		// Have do get this on release, due to what apepars to be an SDL2 bug.
+		// Otherwise inputs repeat when switching to fullscreen (which results in switching back).
+		if ( input->wasKeyReleased( SDLK_F11 ) ) {
+			graphics_->toggleFullscreen();
+			int w = DEFAULT_SCREEN_WIDTH, h = DEFAULT_SCREEN_HEIGHT;
+			graphics_->getWindowSize(w, h);
+			graphics_->setViewport(0,0,w,h);
+			camera_->resize(w,h);
+		}
+		if ( input->wasKeyPressed( SDLK_RETURN ) ) {
+			width_ += particleSystem->getWidth();
+			height_ += particleSystem->getHeight();
+			int numParticles = width_ * height_;
+			std::cout << "Reinitializing particle system with " << numParticles << " particle" << (numParticles > 1 ? "s" : "") << "..." << std::endl;
+			particleSystem->resize( width_, height_ );
+			numParticles = particleSystem->getNumParticles();
+			std::cout << "Particle system reinitialized with " << numParticles << " particle" << (numParticles > 1 ? "s" : "") << "." << std::endl;
+			width_ = 0;
+			height_ = 0;
+			return;
+		} else if ( input->isKeyHeld( SDLK_LSHIFT ) || input->isKeyHeld( SDLK_RSHIFT ) ) {
+			if ( input->wasKeyPressed( SDLK_DOWN ) ) {
+				changeParticleDimension(height_, particleSystem->getHeight(), width_ + particleSystem->getWidth(), -PARTICLE_INCR, MAX_PARTICLES, false);
+			} else if ( input->wasKeyPressed( SDLK_UP ) ) {
+				changeParticleDimension(height_, particleSystem->getHeight(), width_ + particleSystem->getWidth(), +PARTICLE_INCR, MAX_PARTICLES, false);
+			} else if ( input->wasKeyPressed( SDLK_LEFT ) ) {
+				changeParticleDimension(width_, particleSystem->getWidth(), height_ + particleSystem->getHeight(), -PARTICLE_INCR, MAX_PARTICLES);
+			} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
+				changeParticleDimension(width_, particleSystem->getWidth(), height_ + particleSystem->getHeight(), +PARTICLE_INCR, MAX_PARTICLES);
+			}
+			return; // Don't do anything else while resizing.
+		}
 		// Change background colours because why not.
 		if ( input->isKeyHeld( SDLK_c ) ) {
 			if ( input->wasKeyPressed( SDLK_r ) ) {
@@ -59,18 +106,6 @@ public:
 		// Check for change in cohesiveness. Using c again here doesn't seem like it should cause slips.
 			changeValuesByArrowKey( input, cohesiveness, COHESIVENESS_SMALL_INCR, COHESIVENESS_LARGE_INCR, 
 				MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
-		}
-		if ( input->wasKeyPressed( SDLK_SPACE ) ) {
-			particleSystem->togglePause();
-		}
-		// Have do get this on release, due to what apepars to be an SDL2 bug.
-		// Otherwise inputs repeat when switching to fullscreen (which results in switching back).
-		if ( input->wasKeyReleased( SDLK_F11 ) ) {
-			graphics_->toggleFullscreen();
-			int w = DEFAULT_SCREEN_WIDTH, h = DEFAULT_SCREEN_HEIGHT;
-			graphics_->getWindowSize(w, h);
-			graphics_->setViewport(0,0,w,h);
-			camera_->resize(w,h);
 		}
 		// Check for change in particle size.
 		if ( input->isKeyHeld( SDLK_p ) ) {

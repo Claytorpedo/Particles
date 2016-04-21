@@ -18,7 +18,7 @@ private:
 	unsigned int particle_texture_width_, particle_texture_height_;
 	VertexBuffer *uv_buffer_, *quad_buffer_;
 	ShaderProgram *init_shader_, *update_shader_, *draw_shader_;
-	Framebuffer *framebuffers_[2]; // Two frame buffers to swap between.
+	Framebuffer *framebuffers_[2];
 
 	struct IDPair {
 		const GLint id;
@@ -42,17 +42,19 @@ private:
 	void swapFramebuffers();
 	std::vector<GLint> setWindowForUpdate();
 public:
-	AmbientParticleSystem(unsigned int dimensionsExponent);
-	AmbientParticleSystem(unsigned int widthExponent, unsigned int heightExponent);
+	AmbientParticleSystem(unsigned int dimensions);
+	AmbientParticleSystem(unsigned int width, unsigned int height);
 	~AmbientParticleSystem();
 
 	bool init();
-	bool resize(unsigned int dimensionsExponent);
-	bool resize(unsigned int widthExponent, unsigned int heightExponent);
+	bool resize(unsigned int dimensions);
+	bool resize(unsigned int width, unsigned int height);
 	void update(const units::MS elapsedTime, const glm::vec4 gravity, const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
 	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
 	void togglePause() { is_paused_ = !is_paused_; }
-	int getNumParticles() { return particle_texture_width_ * particle_texture_height_; }
+	unsigned int getWidth() { return particle_texture_width_; }
+	unsigned int getHeight() { return particle_texture_height_; }
+	unsigned int getNumParticles() { return particle_texture_width_ * particle_texture_height_; }
 };
 
 namespace ambient_particle_system {
