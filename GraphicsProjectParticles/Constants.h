@@ -36,13 +36,13 @@ namespace constants {
 	const int	POINT_SIZE_IRCR = 1;
 
 	const int	DEFAULT_COHESIVENESS = 500;
-	const int	MIN_COHESIVENESS = 1;
+	const int	MIN_COHESIVENESS = 10;
 	const int	MAX_COHESIVENESS = 2500;
 	const int	COHESIVENESS_SMALL_INCR = 10;
 	const int	COHESIVENESS_LARGE_INCR = 100;
 
 	const float	DEFAULT_ZOOM = -5.0f;
-	const float MIN_ZOOM = -40.0f;
+	const float MIN_ZOOM = -50.0f;
 	const float MAX_ZOOM = -0.5f;
 	const float ZOOM_SMALL_INCR = 0.1f;
 	const float ZOOM_LARGE_INCR = 1.0f;

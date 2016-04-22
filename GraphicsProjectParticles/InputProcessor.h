@@ -267,7 +267,7 @@ public:
 				gravityObjs[active_grav_obj_] = glm::vec4( pos, gravityObjs[active_grav_obj_].w );
 				activeGravityObjs[active_grav_obj_] = 1;
 			} else if ( input->wasMouseButtonPressed( SDL_BUTTON_RIGHT ) ) {
-				activeGravityObjs[active_grav_obj_] = 0;
+				activeGravityObjs[active_grav_obj_] = activeGravityObjs[active_grav_obj_] == 1 ? 0 : 1;
 			}
 
 			// Update gravity object distance from camera.
@@ -288,7 +288,7 @@ public:
 		// Log some data.
 		if ( input->wasKeyPressed( SDLK_l ) ) {
 			for (int i = 0; i < MAX_GRAV_OBJECTS; ++i ) {
-				std::cout << i << " active: " << activeGravityObjs[i] <<  " gravity position < x: " << gravityObjs[i].x << " y: ";
+				std::cout << i+1 << " active: " << activeGravityObjs[i] <<  " gravity position < x: " << gravityObjs[i].x << " y: ";
 				std::cout << gravityObjs[i].y << " z: " << gravityObjs[i].z << " >" << " force: " << gravityObjs[i].w << std::endl;
 			}
 		}
