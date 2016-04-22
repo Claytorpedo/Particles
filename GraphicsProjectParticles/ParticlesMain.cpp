@@ -61,7 +61,9 @@ bool getInput(Input *input, Graphics *graphics, Camera *camera) {
 int main (int argc, char* args[]) {
 	bool quit = false;
 	units::MS currentTime, previousTime, elapsedTime;
-	glm::vec4 gravity( -3, -3, 0, DEFAULT_GRAV_FORCE );
+	glm::vec4 gravityObjs[MAX_GRAV_OBJECTS]; 
+	unsigned int activeGravObjs[MAX_GRAV_OBJECTS];
+
 	int pointSize = DEFAULT_POINT_SIZE;
 	int cohesiveness = DEFAULT_COHESIVENESS;
 	glm::vec3 origin( 3.0f, 3.0f, 0.0f );
@@ -86,18 +88,25 @@ int main (int argc, char* args[]) {
 		return 1;
 	}
 	std::cout << "Particle system initialized with " << particleSystem.getNumParticles() << " particles." << std::endl;
+	for (int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
+		activeGravObjs[i] = 0;
+		gravityObjs[i].w = DEFAULT_GRAV_FORCE;
+	}
+	gravityObjs[0] = glm::vec4( DEFAULT_GRAV_POS, DEFAULT_GRAV_FORCE );
+	activeGravObjs[0] = 1;
+
 	previousTime = SDL_GetTicks();
 	while (!quit) {
 		if ( getInput(&input, &graphics, &camera) || input.wasKeyPressed(SDLK_ESCAPE) ) {
 			break;
 		}
-		inputProcessor.processInput( &input, &particleSystem, pointSize, cohesiveness, gravity );
+		inputProcessor.processInput( &input, &particleSystem, pointSize, cohesiveness, gravityObjs, activeGravObjs );
 		// Update the scene.
 		currentTime = SDL_GetTicks();
 		elapsedTime = currentTime - previousTime;
 		elapsedTime = elapsedTime < MAX_FRAME_DUR ? elapsedTime : MAX_FRAME_DUR;
 		previousTime = currentTime;
-		particleSystem.update( elapsedTime, gravity, cohesiveness );
+		particleSystem.update( elapsedTime, gravityObjs, activeGravObjs, cohesiveness );
 
 		// Draw the scene.
 
@@ -111,14 +120,6 @@ int main (int argc, char* args[]) {
 	return 0;
 }
 /*
-
-SOME KIND OF DEPTH VISUALIZATION
-
-MULTIPLE GRAV OBJECTS
-
-
-
-
 	Ideas: Make my bajillion particles
 			Make it so that they gravitate towards a 3D mouse position
 			Make variable gravity and such.

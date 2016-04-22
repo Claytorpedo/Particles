@@ -30,12 +30,6 @@ namespace constants {
 	const MS			SIXTY_FPS_FRAME_DUR = 17;
 	const MS			MAX_FRAME_DUR = SIXTY_FPS_FRAME_DUR * 2;
 	
-	const float	DEFAULT_GRAV_FORCE = 10;
-	const float	MIN_GRAV_FORCE = -10;
-	const float	MAX_GRAV_FORCE = 50;
-	const float	GRAV_FORCE_SMALL_INCR = 0.1f;
-	const float GRAV_FORCE_LARGE_INCR = 1.0f;
-
 	const int	DEFAULT_POINT_SIZE = 1;
 	const int	MIN_POINT_SIZE = 1;
 	const int	MAX_POINT_SIZE = 20;
@@ -54,12 +48,22 @@ namespace constants {
 	const float ZOOM_LARGE_INCR = 1.0f;
 	const float ZOOM_MOUSE_INCR = 0.25f;
 	
+	const glm::vec3 DEFAULT_GRAV_POS(-3.0f, -3.0f, 0.0f );
+
+	const float	DEFAULT_GRAV_FORCE = 10;
+	const float	MIN_GRAV_FORCE = -10;
+	const float	MAX_GRAV_FORCE = 50;
+	const float	GRAV_FORCE_SMALL_INCR = 0.1f;
+	const float GRAV_FORCE_LARGE_INCR = 1.0f;
+
 	const float DEFAULT_GRAV_DIST = 5.0f;
 	const float MIN_GRAV_DIST = 1.0f;
 	const float MAX_GRAV_DIST = 50.0f;
 	const float GRAV_DIST_SMALL_INCR = 0.1f;
 	const float GRAV_DIST_LARGE_INCR = 1.0f;
 	const float GRAV_DIST_MOUSE_INCR = 0.25f;
+
+	const int MAX_GRAV_OBJECTS = 10;
 
 	// Number of rotational degrees moving the mouse from one side of the screen to the other translates to.
 	const float SCREEN_DEGREES_WIDE = 540.0f;

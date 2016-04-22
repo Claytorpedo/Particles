@@ -49,15 +49,20 @@ private:
 	Graphics *graphics_;
 	Camera *camera_;
 	glm::vec2 prev_mouse_left_click_pos_, prev_mouse_right_click_pos_;
-	float gravity_dist_;
+	float gravity_dists_[MAX_GRAV_OBJECTS], particle_alpha_;
 	int width_, height_;
-	float particle_alpha_;
+	int active_grav_obj_;
 public:
 	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST, float particleAlpha = DEFAULT_ALPHA ) 
-		: graphics_(graphics), camera_(camera), gravity_dist_(gravDist), particle_alpha_(particleAlpha), width_(0), height_(0) {}
+		: graphics_(graphics), camera_(camera), particle_alpha_(particleAlpha), width_(0), height_(0), active_grav_obj_(0) {
+		for (int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
+			gravity_dists_[i] = gravDist;
+		}
+	}
 	~InputProcessor() {}
 
-	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness, glm::vec4 &gravity) {
+	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness, 
+					glm::vec4 gravityObjs[MAX_GRAV_OBJECTS], unsigned int activeGravityObjs[MAX_GRAV_OBJECTS]) {
 		if ( input->wasKeyPressed( SDLK_SPACE ) ) {
 			particleSystem->togglePause();
 		}
@@ -120,7 +125,7 @@ public:
 		}
 		// Check for change in gravity force.
 		if ( input->isKeyHeld( SDLK_g ) ) {
-			changeValuesByArrowKey( input, gravity.w, GRAV_FORCE_SMALL_INCR, GRAV_FORCE_LARGE_INCR, 
+			changeValuesByArrowKey( input, gravityObjs[active_grav_obj_].w, GRAV_FORCE_SMALL_INCR, GRAV_FORCE_LARGE_INCR, 
 				MIN_GRAV_FORCE, MAX_GRAV_FORCE, "gravity force");
 		}
 		// Change zoom with keyboard.
@@ -150,6 +155,29 @@ public:
 			particleSystem->setParticleColourNoAlpha( GREEN );
 		} else if ( input->wasKeyPressed( SDLK_KP_9 ) ) {
 			particleSystem->setParticleColourNoAlpha( WHITE );
+		}
+
+		// Change active gravity object.
+		if ( input->wasKeyPressed( SDLK_1 ) ) {
+			active_grav_obj_ = 0;
+		} else if ( input->wasKeyPressed( SDLK_2 ) ) {
+			active_grav_obj_ = 1;
+		} else if ( input->wasKeyPressed( SDLK_3 ) ) {
+			active_grav_obj_ = 2;
+		} else if ( input->wasKeyPressed( SDLK_4 ) ) {
+			active_grav_obj_ = 3;
+		} else if ( input->wasKeyPressed( SDLK_5 ) ) {
+			active_grav_obj_ = 4;
+		} else if ( input->wasKeyPressed( SDLK_6 ) ) {
+			active_grav_obj_ = 5;
+		} else if ( input->wasKeyPressed( SDLK_7 ) ) {
+			active_grav_obj_ = 6;
+		} else if ( input->wasKeyPressed( SDLK_8 ) ) {
+			active_grav_obj_ = 7;
+		} else if ( input->wasKeyPressed( SDLK_9 ) ) {
+			active_grav_obj_ = 8;
+		} else if ( input->wasKeyPressed( SDLK_0 ) ) {
+			active_grav_obj_ = 9;
 		}
 
 		// Update mouse interactions. 
@@ -190,8 +218,8 @@ public:
 			if ( zoom != 0 ) {
 				zoom *= ZOOM_MOUSE_INCR;
 				// Sync gravity object distance with zoom (this seems more intuitive).
-				float dist = gravity_dist_ - zoom;
-				gravity_dist_ = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
+				float dist = gravity_dists_[active_grav_obj_] - zoom;
+				gravity_dists_[active_grav_obj_] = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
 				zoom += camera_->getZoom();
 				zoom = zoom > MAX_ZOOM ? MAX_ZOOM : zoom < MIN_ZOOM ? MIN_ZOOM : zoom;
 				camera_->setZoom( zoom );
@@ -201,22 +229,39 @@ public:
 				int x, y;
 				SDL_GetMouseState( &x, &y );
 				Ray r = camera_->getRay(x, y);
-				glm::vec3 pos = r.position + gravity_dist_ * r.direction;
-				gravity = glm::vec4( pos, gravity.w );
-				std::cout << "gravity position < x: " << gravity.x << " y: " << gravity.y << " z: " << gravity.z << " >" << std::endl;
+				glm::vec3 pos = r.position + gravity_dists_[active_grav_obj_] * r.direction;
+				gravityObjs[active_grav_obj_] = glm::vec4( pos, gravityObjs[active_grav_obj_].w );
+				activeGravityObjs[active_grav_obj_] = 1;
+				std::cout << "gravity position < x: " << gravityObjs[active_grav_obj_].x << " y: ";
+				std::cout << gravityObjs[active_grav_obj_].y << " z: " << gravityObjs[active_grav_obj_].z << " >" << std::endl;
 			} else if ( input->isMouseButtonHeld( SDL_BUTTON_LEFT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
 				Ray r = camera_->getRay(x, y);
-				glm::vec3 pos = r.position + gravity_dist_ * r.direction;
-				gravity = glm::vec4( pos, gravity.w );
+				glm::vec3 pos = r.position + gravity_dists_[active_grav_obj_] * r.direction;
+				gravityObjs[active_grav_obj_] = glm::vec4( pos, gravityObjs[active_grav_obj_].w );
+				activeGravityObjs[active_grav_obj_] = 1;
+			} else if ( input->wasMouseButtonPressed( SDL_BUTTON_RIGHT ) ) {
+				activeGravityObjs[active_grav_obj_] = 0;
 			}
+
 			// Update gravity object distance from camera.
-			float dist = input->getMouseWheelValue();
-			if ( dist != 0 ) {
-				dist *= GRAV_DIST_MOUSE_INCR;
-				dist += gravity_dist_;
-				gravity_dist_ = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
+			// Especially since there is no visualization, this isn't very intuitive, so I'm hiding it behind the alt key for now.
+			if ( input->isKeyHeld( SDLK_RALT ) || input->isKeyHeld( SDLK_LALT ) ) {
+				float dist = input->getMouseWheelValue();
+				if ( dist != 0 ) {
+					dist *= GRAV_DIST_MOUSE_INCR;
+					dist += gravity_dists_[active_grav_obj_];
+					gravity_dists_[active_grav_obj_] = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
+				}
+			}
+		}
+
+		// Log some data.
+		if ( input->wasKeyPressed( SDLK_l ) ) {
+			for (int i = 0; i < MAX_GRAV_OBJECTS; ++i ) {
+				std::cout << i << " active: " << activeGravityObjs[i] <<  " gravity position < x: " << gravityObjs[i].x << " y: ";
+				std::cout << gravityObjs[i].y << " z: " << gravityObjs[i].z << " >" << " force: " << gravityObjs[i].w << std::endl;
 			}
 		}
 	}
