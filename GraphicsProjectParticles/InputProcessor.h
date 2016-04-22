@@ -240,9 +240,11 @@ public:
 			float zoom = input->getMouseWheelValue();
 			if ( zoom != 0 ) {
 				zoom *= ZOOM_MOUSE_INCR;
-				// Sync gravity object distance with zoom (this seems more intuitive).
-				float dist = gravity_dists_[active_grav_obj_] - zoom;
-				gravity_dists_[active_grav_obj_] = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
+				// Sync gravity objects distance with zoom (this seems more intuitive).
+				for (int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
+					float dist = gravity_dists_[i] - zoom;
+					gravity_dists_[i] = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
+				}
 				zoom += camera_->getZoom();
 				zoom = zoom > MAX_ZOOM ? MAX_ZOOM : zoom < MIN_ZOOM ? MIN_ZOOM : zoom;
 				camera_->setZoom( zoom );
