@@ -92,7 +92,7 @@ void Framebuffer::genTexture(GLuint &tex) {
 	// Give empty image to OpenGL.
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, 0);
 	// Use GL_NEAREST, since we don't want any kind of averaging across values:
-	// we just want one pixel to represent a particle's data.
+	// We just want one pixel to represent a particle's data.
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	// This probably isn't necessary, but we don't want to have UV coords past the image edges.

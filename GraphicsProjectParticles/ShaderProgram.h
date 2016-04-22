@@ -22,7 +22,6 @@ public:
 		void unload(const GLuint program);
 	};
 
-	// constructor initializes Window, and Renderer
 	ShaderProgram(const char* vertex_file_path, const char* fragment_file_path, const char* geometry_file_path = 0);
 	~ShaderProgram();
 

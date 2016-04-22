@@ -30,6 +30,8 @@ inline void changeValuesByArrowKey(Input* input, T &val, T small_incr, T large_i
 		changeValues( val, -large_incr, min, max, name, log);
 	} else if ( input->wasKeyPressed( SDLK_RIGHT ) ) {
 		changeValues( val, large_incr, min, max, name, log);
+	} else if ( input->getMouseWheelValue() != 0 ) {
+		changeValues( val, input->getMouseWheelValue() * small_incr, min, max, name, log);
 	}
 }
 inline void changeParticleDimension(int &dimenAdjust, int dimenCurrent, int otherDimen, int incr, int max, bool isWidth = true, bool log = true) {
@@ -52,9 +54,10 @@ private:
 	float gravity_dists_[MAX_GRAV_OBJECTS], particle_alpha_;
 	int width_, height_;
 	int active_grav_obj_;
+	const int default_dist_;
 public:
 	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST, float particleAlpha = DEFAULT_ALPHA ) 
-		: graphics_(graphics), camera_(camera), particle_alpha_(particleAlpha), width_(0), height_(0), active_grav_obj_(0) {
+		: graphics_(graphics), camera_(camera), particle_alpha_(particleAlpha), width_(0), height_(0), active_grav_obj_(0), default_dist_(gravDist) {
 		for (int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
 			gravity_dists_[i] = gravDist;
 		}
@@ -112,6 +115,20 @@ public:
 		// Check for change in cohesiveness. Using c again here doesn't seem like it should cause slips.
 			changeValuesByArrowKey( input, cohesiveness, COHESIVENESS_SMALL_INCR, COHESIVENESS_LARGE_INCR, 
 				MIN_COHESIVENESS, MAX_COHESIVENESS, "cohesiveness");
+		} else if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
+			if ( input->wasKeyPressed( SDLK_BACKSPACE ) ) {
+				// Turn off and reset all gravity objects.
+				for ( int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
+					activeGravityObjs[i] = 0;
+					gravityObjs[i] = glm::vec4( 0.0f, 0.0f, 0.0f, DEFAULT_GRAV_FORCE);
+					gravity_dists_[i] = default_dist_;
+				}
+			}
+		} else if ( input->wasKeyPressed( SDLK_BACKSPACE ) ) {
+			// Turn off all gravity objects.
+			for ( int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
+				activeGravityObjs[i] = 0;
+			}
 		}
 		// Change particle alpha value.
 		if ( input->isKeyHeld( SDLK_a ) ) {
@@ -184,6 +201,12 @@ public:
 		if ( input->isKeyHeld( SDLK_LCTRL ) || input->isKeyHeld( SDLK_RCTRL ) ) {
 			if ( input->wasKeyPressed( SDLK_r ) ) {
 				camera_->reset();
+				for (int i = 0; i < MAX_GRAV_OBJECTS; ++i ) {
+					gravity_dists_[i] = default_dist_;
+					if ( activeGravityObjs[i] == 0 ) {
+						gravityObjs[i].w = DEFAULT_GRAV_FORCE;
+					}
+				}
 			}
 			// Update rotation.
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_LEFT ) ) {
@@ -253,6 +276,9 @@ public:
 					dist *= GRAV_DIST_MOUSE_INCR;
 					dist += gravity_dists_[active_grav_obj_];
 					gravity_dists_[active_grav_obj_] = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
+				}
+				if ( input->wasKeyPressed( SDLK_r ) ) {
+					gravity_dists_[active_grav_obj_] = default_dist_;
 				}
 			}
 		}

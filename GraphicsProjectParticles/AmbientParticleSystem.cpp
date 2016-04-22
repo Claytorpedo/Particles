@@ -176,7 +176,6 @@ bool AmbientParticleSystem::resize(unsigned int width, unsigned int height) {
 }
 void AmbientParticleSystem::initParticleDrawing() {
 	framebuffers_[0]->drawTo();
-	// Store the previous viewport.
 	std::vector<GLint> prevViewport = setWindowForUpdate();
 	init_shader_->use();
 	glUniform2f( init_uniform_ids_[init::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
@@ -261,7 +260,6 @@ std::vector<GLint> AmbientParticleSystem::setWindowForUpdate() {
 }
 
 void AmbientParticleSystem::draw( const glm::mat4 &PVM, const unsigned int pointSize) {
-	//glDisable( GL_DEPTH_TEST );
 	draw_shader_->use();
 	// Enable additive blending, so overlapping particles appear brighter.
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE ); 

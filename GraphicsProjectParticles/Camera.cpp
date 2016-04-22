@@ -3,11 +3,9 @@
 #include "Constants.h"
 
 #include "glm\glm.hpp"
-#include "glm\gtx\transform.hpp"
 #include "glm\gtc\quaternion.hpp"
 #include "glm\gtc\matrix_transform.hpp"
-#include "glm\gtx\rotate_vector.hpp"
-#include "glm\gtc\matrix_inverse.hpp"
+
 
 Camera::Camera(glm::vec3 origin, glm::vec3 position, glm::vec3 rotation, float FOV, float aspect, float near, float far,
 			   units::Pixel screenWidth, units::Pixel screenHeight) 

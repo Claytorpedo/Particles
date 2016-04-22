@@ -13,7 +13,7 @@ using namespace constants;
 Graphics::Graphics(std::string windowTitle, int glMajorVersion, int glMinorVersion) :
 	window_title_(windowTitle), gl_major_ver_(glMajorVersion), gl_minor_ver_(glMinorVersion) { }
 Graphics::~Graphics() {
-	// free renderer and window
+	// Free window.
 	SDL_DestroyWindow(window_);
 }
 bool Graphics::init() {
@@ -22,14 +22,13 @@ bool Graphics::init() {
 		return false;
 	}
 	// Set the OpenGL version.
-	
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, gl_major_ver_) < 0 ||
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, gl_minor_ver_) < 0 ) {
-			std::cerr << "Error: Could not set OpenGl to version " << gl_major_ver_ << "." << gl_minor_ver_ << "." << std::endl;
-			return false;
+		std::cerr << "Error: Could not set OpenGl to version " << gl_major_ver_ << "." << gl_minor_ver_ << "." << std::endl;
+		return false;
 	}
 	// Disable depreciated functionality.
-	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 	// Create the window.
 	window_ = SDL_CreateWindow(window_title_.c_str(), SDL_WINDOWPOS_UNDEFINED, 
 		SDL_WINDOWPOS_UNDEFINED, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, 

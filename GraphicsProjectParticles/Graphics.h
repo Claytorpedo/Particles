@@ -10,7 +10,7 @@
 
 class Graphics {
 public:
-	// constructor initializes Window, and Renderer
+	// Constructor initializes Window.
 	Graphics(std::string windowTitle, int glMajorVersion = 4, int glMinorVersion = 0);
 	~Graphics();
 

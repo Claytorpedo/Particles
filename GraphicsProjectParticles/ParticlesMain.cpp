@@ -88,6 +88,8 @@ int main (int argc, char* args[]) {
 		return 1;
 	}
 	std::cout << "Particle system initialized with " << particleSystem.getNumParticles() << " particles." << std::endl;
+
+	// Initialize gravity objects.
 	for (int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
 		activeGravObjs[i] = 0;
 		gravityObjs[i].w = DEFAULT_GRAV_FORCE;
@@ -101,6 +103,7 @@ int main (int argc, char* args[]) {
 			break;
 		}
 		inputProcessor.processInput( &input, &particleSystem, pointSize, cohesiveness, gravityObjs, activeGravObjs );
+
 		// Update the scene.
 		currentTime = SDL_GetTicks();
 		elapsedTime = currentTime - previousTime;
@@ -109,43 +112,10 @@ int main (int argc, char* args[]) {
 		particleSystem.update( elapsedTime, gravityObjs, activeGravObjs, cohesiveness );
 
 		// Draw the scene.
-
 		graphics.clear();
-
 		particleSystem.draw( camera.getProjectionView(), pointSize );
-
 		graphics.present();
 	}
 	close();
 	return 0;
 }
-/*
-	Ideas: Make my bajillion particles
-			Make it so that they gravitate towards a 3D mouse position
-			Make variable gravity and such.
-			Make the ability to place more than one gravity spot, indicated by an object/light or something.
-			Add larger secondary particles.
-				The small particles bounce off of these ones
-				If a larger one hits a larger one, they explode like fireworks or something.
-
-https://www.packtpub.com/books/content/basics-glsl-40-shaders
-Passing arrays or structures to a function
-
-It should be noted that when passing arrays or structures to functions, they are passed by value. 
-If a large array or structure is passed, it can incur a large copy operation which may not be desired. 
-It would be a better choice to declare these variables in the global scope.
-
-
-	Create vertices randomly with normal distribution around origin. 
-
-	If things are looking bad, then go take a look at CUDA quick.
-
-	http://www.hackbarth-gfx.com/2013/03/17/making-of-1-million-particles/
-	This might be doing velocity and stuff with textures.
-
-	https://github.com/nopjia/webgl-particles/tree/master/app
-	Another million thing
-
-
-	Set particle colour based on speed.
-*/

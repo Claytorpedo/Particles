@@ -10,7 +10,6 @@
 
 namespace {
 	// Some utility functions.
-
 	std::string getNameFromType(const GLuint type) {
 		return	type == GL_VERTEX_SHADER ? "vertex" : 
 				type == GL_FRAGMENT_SHADER ? "fragment" : 
@@ -21,7 +20,7 @@ namespace {
 		std::string fileData;
 		std::ifstream fileStream(file_path, std::ios::in);
 		if(!fileStream.is_open()){
-			std::cout << "Error: the file \"" << file_path << "\" could not be opened." << std::endl;
+			std::cerr << "Error: the file \"" << file_path << "\" could not be opened." << std::endl;
 			return "";
 		}
 		std::string Line = "";
@@ -30,7 +29,7 @@ namespace {
 		}
 		fileStream.close();
 		if ( fileData.empty() ) {
-			std::cout << "Error: The file \"" << file_path << "\" was empty or could not be read." << std::endl;
+			std::cerr << "Error: The file \"" << file_path << "\" was empty or could not be read." << std::endl;
 		}
 		return fileData;
 	}
@@ -83,7 +82,7 @@ bool ShaderProgram::load() {
 		if ( logLen > 0 ){
 			std::vector<char> log(logLen+1);
 			glGetProgramInfoLog(shader_program_, logLen, NULL, &log[0]);
-			std::cout << "Error: the program could not be linked." << std::endl << &log[0] << std::endl;
+			std::cerr << "Error: the program could not be linked." << std::endl << &log[0] << std::endl;
 		}
 		unload();
 		return false;
@@ -120,13 +119,13 @@ bool ShaderProgram::compileShader(ShaderInfo shaderInfo) {
 	glGetShaderiv(shaderInfo.getID(), GL_COMPILE_STATUS, &result);
 	if ( result == GL_FALSE ) {
 		std::string type_s = getNameFromType(shaderInfo.type);
-		std::cout << "Error: Failed to compile " << type_s<< " shader." << std::endl;
+		std::cerr << "Error: Failed to compile " << type_s<< " shader." << std::endl;
 		int logLen;
 		glGetShaderiv(shaderInfo.getID(), GL_INFO_LOG_LENGTH, &logLen);
 		if ( logLen > 0 ){
 			std::vector<char> log(logLen+1);
 			glGetShaderInfoLog(shaderInfo.getID(), logLen, NULL, &log[0]);
-			std::cout << "Error: the " << type_s << " shader could not be compiled." << std::endl << &log[0] << std::endl;
+			std::cerr << "Error: the " << type_s << " shader could not be compiled." << std::endl << &log[0] << std::endl;
 		}
 		return false;
 	}
