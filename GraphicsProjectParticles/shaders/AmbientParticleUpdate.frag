@@ -8,7 +8,7 @@ layout(location = 1) out vec3 velocity;
 #define K_DECEL 0.99
 #define EPS 0.00001 // Keeps us from division by zero.
 
-uniform vec2 uResolution;
+uniform uvec2 uResolution;
 uniform float uElapsedTime;
 uniform int uCohesiveness; // Keeps the particles together. Higher number = less together.
 uniform vec4 uGravity[GRAV_OBJS];

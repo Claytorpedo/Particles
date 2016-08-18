@@ -2,7 +2,7 @@
 
 in vec2 inUV;
 
-uniform float uPointSize;
+uniform uint uPointSize;
 uniform mat4 uPVM;
 uniform sampler2D uTexPos;
 

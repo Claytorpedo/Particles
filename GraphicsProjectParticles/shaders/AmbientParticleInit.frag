@@ -3,7 +3,7 @@
 layout(location = 0) out vec3 position;
 layout(location = 1) out vec3 velocity;
 
-uniform vec2 uResolution;
+uniform uvec2 uResolution;
 
 // source: http://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
 float rand(vec2 seed) {

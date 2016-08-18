@@ -54,7 +54,7 @@ private:
 	float gravity_dists_[MAX_GRAV_OBJECTS], particle_alpha_;
 	int width_, height_;
 	int active_grav_obj_;
-	const int default_dist_;
+	const float default_dist_;
 public:
 	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST, float particleAlpha = DEFAULT_ALPHA ) 
 		: graphics_(graphics), camera_(camera), particle_alpha_(particleAlpha), width_(0), height_(0), active_grav_obj_(0), default_dist_(gravDist) {
@@ -216,11 +216,11 @@ public:
 			} else if ( input->isMouseButtonHeld( SDL_BUTTON_LEFT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
-				int delta_x = x - prev_mouse_left_click_pos_.x; // y-axis rotation.
-				int delta_y = y - prev_mouse_left_click_pos_.y; // x-axis rotation.
+				float delta_x = x - prev_mouse_left_click_pos_.x; // y-axis rotation.
+				float delta_y = y - prev_mouse_left_click_pos_.y; // x-axis rotation.
 				camera_->rotate( delta_x, delta_y );
-				prev_mouse_left_click_pos_.x = x;
-				prev_mouse_left_click_pos_.y = y;
+				prev_mouse_left_click_pos_.x = float(x);
+				prev_mouse_left_click_pos_.y = float(y);
 			}
 			// Update pan.
 			if ( input->wasMouseButtonPressed( SDL_BUTTON_RIGHT ) ) {
@@ -230,16 +230,16 @@ public:
 			} else if ( input->isMouseButtonHeld( SDL_BUTTON_RIGHT ) ) {
 				int x, y;
 				SDL_GetMouseState( &x, &y );
-				int delta_x = x - prev_mouse_right_click_pos_.x;
-				int delta_y = y - prev_mouse_right_click_pos_.y;
+				float delta_x = x - prev_mouse_right_click_pos_.x;
+				float delta_y = y - prev_mouse_right_click_pos_.y;
 				camera_->pan( delta_x, delta_y );
-				prev_mouse_right_click_pos_.x = x;
-				prev_mouse_right_click_pos_.y = y;
+				prev_mouse_right_click_pos_.x = float(x);
+				prev_mouse_right_click_pos_.y = float(y);
 			}
 			// Update zoom.
-			float zoom = input->getMouseWheelValue();
-			if ( zoom != 0 ) {
-				zoom *= ZOOM_MOUSE_INCR;
+			const int scroll = input->getMouseWheelValue();
+			if ( scroll != 0 ) {
+				float zoom = scroll * ZOOM_MOUSE_INCR;
 				// Sync gravity objects distance with zoom (this seems more intuitive).
 				for (int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
 					float dist = gravity_dists_[i] - zoom;
@@ -273,9 +273,9 @@ public:
 			// Update gravity object distance from camera.
 			// Especially since there is no visualization, this isn't very intuitive, so I'm hiding it behind the alt key for now.
 			if ( input->isKeyHeld( SDLK_RALT ) || input->isKeyHeld( SDLK_LALT ) ) {
-				float dist = input->getMouseWheelValue();
-				if ( dist != 0 ) {
-					dist *= GRAV_DIST_MOUSE_INCR;
+				const int scroll = input->getMouseWheelValue();
+				if ( scroll != 0 ) {
+					float dist = scroll * GRAV_DIST_MOUSE_INCR;
 					dist += gravity_dists_[active_grav_obj_];
 					gravity_dists_[active_grav_obj_] = dist > MAX_GRAV_DIST ? MAX_GRAV_DIST : dist < MIN_GRAV_DIST ? MIN_GRAV_DIST : dist;
 				}

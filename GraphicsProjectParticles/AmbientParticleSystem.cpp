@@ -75,13 +75,13 @@ bool AmbientParticleSystem::initFramebuffers() {
 	return framebuffers_[0]->init() && framebuffers_[1]->init();
 }
 void AmbientParticleSystem::getShaderVariableIDs(GLuint shaderProgramID, ShaderVariableIDs &ids, std::vector<std::string> names) {
-	for (int i = 0; i < names.size(); ++i ) {
+	for (std::size_t i = 0; i < names.size(); ++i ) {
 		GLint id = glGetAttribLocation( shaderProgramID, names[i].c_str() );
 		ids.push_back( new IDPair(id, names[i]) );
 	}
 }
 void AmbientParticleSystem::getShaderUniformIDs(GLuint shaderProgramID, ShaderUniformIDs &ids, std::vector<std::string> names) {
-	for (int i = 0; i < names.size(); ++i ) {
+	for (std::size_t i = 0; i < names.size(); ++i ) {
 		GLint id = glGetUniformLocation( shaderProgramID, names[i].c_str() );
 		ids.push_back( new IDPair(id, names[i]) );
 	}
@@ -178,7 +178,7 @@ void AmbientParticleSystem::initParticleDrawing() {
 	framebuffers_[0]->drawTo();
 	std::vector<GLint> prevViewport = setWindowForUpdate();
 	init_shader_->use();
-	glUniform2f( init_uniform_ids_[init::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
+	glUniform2ui( init_uniform_ids_[init::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
 
 	quad_buffer_->bind();
 	GLint attrib = init_variable_ids_[init::IN_VERTEX_POS]->id;
@@ -206,7 +206,7 @@ void AmbientParticleSystem::update( const units::MS elapsedTime, const glm::vec4
 	// Bind the framebuffer that wasn't updated last time (or initialized from).
 	framebuffers_[1]->drawTo();
 	// Bind our uniform/variable handles to the update shader.
-	glUniform2f( update_uniform_ids_[update::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
+	glUniform2ui( update_uniform_ids_[update::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
 	glUniform1f( update_uniform_ids_[update::U_ELAPSED_TIME]->id, units::millisToSeconds(elapsedTime) );
 	glUniform1i( update_uniform_ids_[update::U_COHESIVENESS]->id, cohesiveness);
 	glUniform4fv( update_uniform_ids_[update::U_GRAVITY]->id, constants::MAX_GRAV_OBJECTS, &gravityObjs[0][0]);
@@ -266,7 +266,7 @@ void AmbientParticleSystem::draw( const glm::mat4 &PVM, const unsigned int point
 	
 	glUniformMatrix4fv( draw_uniform_ids_[draw::U_PVM]->id, 1, GL_FALSE, &PVM[0][0] );
 	glUniform4f( draw_uniform_ids_[draw::U_COLOUR]->id, colour_.r, colour_.g, colour_.b, colour_.a);
-	glUniform1f( draw_uniform_ids_[draw::U_POINT_SIZE]->id, pointSize);
+	glUniform1ui( draw_uniform_ids_[draw::U_POINT_SIZE]->id, pointSize);
 
 	// Bind our textures.
 	GLint textureUniformLocations[NUM_TEXTURES_PER_FRAMEBUFFER];

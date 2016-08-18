@@ -66,7 +66,7 @@ bool ShaderProgram::load() {
 	}
 	shader_program_ = glCreateProgram();
 	// Compile the shaders and add them to the program.
-	for (int i = 0; i < shaders_.size(); ++i) {
+	for (std::size_t i = 0; i < shaders_.size(); ++i) {
 		if ( !compileShader( shaders_[i] ) ) {
 			unload();
 			return false;
@@ -88,14 +88,14 @@ bool ShaderProgram::load() {
 		return false;
 	}
 	// Clean up.
-	for (int i = 0; i < shaders_.size(); ++i) {
+	for (std::size_t i = 0; i < shaders_.size(); ++i) {
 		shaders_[i].unload( shader_program_ );
 	}
 	return true;
 }
 void ShaderProgram::unload() {
 	if ( shader_program_ ) {
-		for (int i = 0; i < shaders_.size(); ++i) {
+		for (std::size_t i = 0; i < shaders_.size(); ++i) {
 			shaders_[i].unload( shader_program_ );
 		}
 		glDeleteProgram( shader_program_ );
