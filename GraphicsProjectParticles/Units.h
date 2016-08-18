@@ -2,7 +2,7 @@
 #define _UNITS_H_
 
 #include <cmath>
-#include "GL\glew.h"
+#include "GL/glew.h"
 
 namespace units {
 	typedef float			Coordinate;

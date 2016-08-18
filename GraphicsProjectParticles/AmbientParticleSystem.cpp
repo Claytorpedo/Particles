@@ -1,9 +1,9 @@
 #include "AmbientParticleSystem.h"
 
 #include <iostream>
-#include "GL\glew.h"
-#include "SDL2\SDL_opengl.h"
-#include "glm\glm.hpp"
+#include "GL/glew.h"
+#include "SDL2/SDL_opengl.h"
+#include "glm/glm.hpp"
 #include "Units.h"
 #include "Constants.h"
 #include "VertexBuffer.h"

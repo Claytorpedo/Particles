@@ -1,6 +1,6 @@
-#include "SDL2\SDL.h"
-#include "GL\glew.h"
-#include "SDL2\SDL_opengl.h"
+#include "SDL2/SDL.h"
+#include "GL/glew.h"
+#include "SDL2/SDL_opengl.h"
 #include <iostream>
 #include <string>
 
@@ -13,7 +13,7 @@
 #include "InputProcessor.h"
 #include "Camera.h"
 
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 
 using namespace constants;
 

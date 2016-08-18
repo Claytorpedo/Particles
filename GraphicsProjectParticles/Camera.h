@@ -1,8 +1,8 @@
 #ifndef _CAMERA_H
 #define	_CAMERA_H
 
-#include "glm\glm.hpp"
-#include "glm\gtc\quaternion.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
 #include "Constants.h"
 #include "Units.h"
 

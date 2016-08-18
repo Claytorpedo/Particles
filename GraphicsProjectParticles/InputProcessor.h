@@ -7,7 +7,7 @@
 #include "AmbientParticleSystem.h"
 #include "Constants.h"
 
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 
 #include <cstdio>
 #include <string>

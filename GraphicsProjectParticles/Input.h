@@ -2,7 +2,7 @@
 #define _INPUT_H
 
 #include <unordered_map>
-#include "SDL2\SDL.h"
+#include "SDL2/SDL.h"
 
 class Input {
 

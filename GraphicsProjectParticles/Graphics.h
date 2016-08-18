@@ -1,8 +1,8 @@
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
 
-#include "SDL2\SDL.h"
-#include "GL\glew.h"
+#include "SDL2/SDL.h"
+#include "GL/glew.h"
 #include <string>
 
 #include "Units.h"

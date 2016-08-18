@@ -2,9 +2,9 @@
 #include "Units.h"
 #include "Constants.h"
 
-#include "glm\glm.hpp"
-#include "glm\gtc\quaternion.hpp"
-#include "glm\gtc\matrix_transform.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 
 Camera::Camera(glm::vec3 origin, glm::vec3 position, glm::vec3 rotation, float FOV, float aspect, float near, float far,

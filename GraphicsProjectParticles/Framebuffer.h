@@ -2,7 +2,7 @@
 #define _FRAMEBUFFER_H
 
 #include <vector>
-#include "GL\glew.h"
+#include "GL/glew.h"
 
 static const GLuint _MAX_COLOUR_ATTACH = 16;
 

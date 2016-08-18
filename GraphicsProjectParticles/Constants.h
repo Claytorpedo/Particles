@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "glm\glm.hpp"
+#include "glm/glm.hpp"
 
 using namespace units;
 

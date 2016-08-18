@@ -1,6 +1,6 @@
 #include "Input.h"
 
-#include "SDL2\SDL.h"
+#include "SDL2/SDL.h"
 #include <unordered_map>
 
 void Input::newFrameClear() {
