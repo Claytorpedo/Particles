@@ -69,7 +69,7 @@ public:
 		if ( input->wasKeyPressed( SDLK_SPACE ) ) {
 			particleSystem->togglePause();
 		}
-		// Have do get this on release, due to what apepars to be an SDL2 bug.
+		// Have do get this on release, due to what appears to be an SDL2 bug.
 		// Otherwise inputs repeat when switching to fullscreen (which results in switching back).
 		if ( input->wasKeyReleased( SDLK_F11 ) ) {
 			graphics_->toggleFullscreen();
