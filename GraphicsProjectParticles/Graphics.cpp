@@ -85,13 +85,7 @@ void Graphics::toggleFullscreen() {
 	is_fullscreen_ = !is_fullscreen_;
 }
 void Graphics::getWindowSize( int &w, int &h ) {
-	SDL_DisplayMode dm;
-	if ( SDL_GetDesktopDisplayMode( 0, &dm ) != 0 ) {
-		std::cerr << "SDL_GetDesktopDisplayMode failed: " << SDL_GetError() << std::endl;
-		return;
-	}
-	w = dm.w;
-	h = dm.h;
+	SDL_GetWindowSize(window_, &w, &h);
 }
 void Graphics::present() {
 	SDL_GL_SwapWindow( window_ );
