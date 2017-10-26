@@ -133,7 +133,7 @@ void AmbientParticleSystem::createUVBuffer() {
 	uv_buffer_ = new VertexBuffer(2, count, uv_data);
 	uv_data.clear();
 }
-bool AmbientParticleSystem::init() {
+bool AmbientParticleSystem::init(const units::Pixel viewportWidth, const units::Pixel viewportHeight) {
 	if ( particle_texture_height_ < 1 || particle_texture_width_ < 1 ) {
 		std::cerr << "Error: Texture width and height must be greater than zero!" << std::endl;
 		return false;
@@ -154,13 +154,10 @@ bool AmbientParticleSystem::init() {
 	createQuadBuffer();
 	createUVBuffer();
 	
-	initParticleDrawing();
+	initParticleDrawing(viewportWidth, viewportHeight);
 	return true;
 }
-bool AmbientParticleSystem::resize(unsigned int dimensions) {
-	return resize(dimensions, dimensions);
-}
-bool AmbientParticleSystem::resize(unsigned int width, unsigned int height) {
+bool AmbientParticleSystem::resize(unsigned int width, unsigned int height, const units::Pixel viewportWidth, const units::Pixel viewportHeight) {
 	particle_texture_width_ = width;
 	particle_texture_height_ = height;
 
@@ -171,12 +168,12 @@ bool AmbientParticleSystem::resize(unsigned int width, unsigned int height) {
 	}
 	createUVBuffer();
 
-	initParticleDrawing();
+	initParticleDrawing(viewportWidth, viewportHeight);
 	return true;
 }
-void AmbientParticleSystem::initParticleDrawing() {
+void AmbientParticleSystem::initParticleDrawing(const units::Pixel viewportWidth, const units::Pixel viewportHeight) {
 	framebuffers_[0]->drawTo();
-	std::vector<GLint> prevViewport = setWindowForUpdate();
+	setWindowForUpdate();
 	init_shader_->use();
 	glUniform2ui( init_uniform_ids_[init::U_RESOLUTION]->id, particle_texture_width_, particle_texture_height_ );
 
@@ -195,13 +192,12 @@ void AmbientParticleSystem::initParticleDrawing() {
 	glDisableVertexAttribArray( attrib );
 	init_shader_->stopUsing();
 	// Return the viewport to its previous state.
-	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
+	glViewport(0, 0, viewportWidth, viewportHeight );
 }
-void AmbientParticleSystem::update( const units::MS elapsedTime, const glm::vec4 gravityObjs[constants::MAX_GRAV_OBJECTS], 
-								   const unsigned int activeGravObjs[constants::MAX_GRAV_OBJECTS], const unsigned int cohesiveness) {
-	if ( is_paused_ ) {
+void AmbientParticleSystem::update( const units::MS elapsedTime, const units::Pixel viewportWidth, const units::Pixel viewportHeight,
+                                    const glm::vec4 gravityObjs[constants::MAX_GRAV_OBJECTS], const unsigned int activeGravObjs[constants::MAX_GRAV_OBJECTS], const unsigned int cohesiveness) {
+	if ( is_paused_ )
 		return;
-	}
 	update_shader_->use();
 	// Bind the framebuffer that wasn't updated last time (or initialized from).
 	framebuffers_[1]->drawTo();
@@ -212,8 +208,7 @@ void AmbientParticleSystem::update( const units::MS elapsedTime, const glm::vec4
 	glUniform4fv( update_uniform_ids_[update::U_GRAVITY]->id, constants::MAX_GRAV_OBJECTS, &gravityObjs[0][0]);
 	glUniform1uiv( update_uniform_ids_[update::U_ACTIVE_GRAV]->id, constants::MAX_GRAV_OBJECTS, &activeGravObjs[0]);
 
-	std::vector<GLint> prevViewport = setWindowForUpdate();
-
+	setWindowForUpdate();
 	// Bind our textures.
 	GLint textureUniformLocations[NUM_TEXTURES_PER_FRAMEBUFFER];
 	for (unsigned int i = 0; i < NUM_TEXTURES_PER_FRAMEBUFFER; ++i) {
@@ -237,7 +232,7 @@ void AmbientParticleSystem::update( const units::MS elapsedTime, const glm::vec4
 	framebuffers_[1]->stopDrawingTo();
 
 	// Return the viewport to its previous state.
-	glViewport( prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3] );
+	glViewport( 0, 0, viewportWidth, viewportHeight );
 	update_shader_->stopUsing();
 	swapFramebuffers();
 }
@@ -247,16 +242,11 @@ void AmbientParticleSystem::swapFramebuffers() {
 	framebuffers_[0] = framebuffers_[1];
 	framebuffers_[1] = temp;
 }
-std::vector<GLint> AmbientParticleSystem::setWindowForUpdate() {
-	// Store the previous viewport.
-	GLint prevViewport[4];
-	glGetIntegerv( GL_VIEWPORT, prevViewport );
+void AmbientParticleSystem::setWindowForUpdate() {
 	glViewport( 0, 0, particle_texture_width_, particle_texture_height_ );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	glDisable( GL_DEPTH_TEST ); // Draw everything flat.
 	glBlendFunc( GL_ONE, GL_ZERO );
-	std::vector<GLint> viewport(prevViewport, prevViewport + 4);
-	return viewport;
 }
 
 void AmbientParticleSystem::draw( const glm::mat4 &PVM, const unsigned int pointSize) {

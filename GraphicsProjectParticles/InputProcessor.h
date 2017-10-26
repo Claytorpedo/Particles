@@ -56,7 +56,7 @@ private:
 	int active_grav_obj_;
 	const float default_dist_;
 public:
-	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST, float particleAlpha = DEFAULT_ALPHA ) 
+	InputProcessor(Graphics* graphics, Camera* camera, float gravDist = DEFAULT_GRAV_DIST, float particleAlpha = DEFAULT_ALPHA )
 		: graphics_(graphics), camera_(camera), particle_alpha_(particleAlpha), width_(0), height_(0), active_grav_obj_(0), default_dist_(gravDist) {
 		for (int i = 0; i < MAX_GRAV_OBJECTS; ++i) {
 			gravity_dists_[i] = gravDist;
@@ -64,7 +64,7 @@ public:
 	}
 	~InputProcessor() {}
 
-	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness, 
+	void processInput(Input *input, AmbientParticleSystem* particleSystem, int &pointSize, int &cohesiveness,
 					glm::vec4 gravityObjs[MAX_GRAV_OBJECTS], unsigned int activeGravityObjs[MAX_GRAV_OBJECTS]) {
 		if ( input->wasKeyPressed( SDLK_SPACE ) ) {
 			particleSystem->togglePause();
@@ -81,9 +81,11 @@ public:
 		if ( input->wasKeyPressed( SDLK_RETURN ) ) {
 			width_ += particleSystem->getWidth();
 			height_ += particleSystem->getHeight();
-			int numParticles = width_ * height_;
+			units::Pixel numParticles = width_ * height_;
 			std::cout << "Reinitializing particle system with " << numParticles << " particle" << (numParticles > 1 ? "s" : "") << "..." << std::endl;
-			particleSystem->resize( width_, height_ );
+			units::Pixel viewportWidth, viewportHeight;
+			graphics_->getWindowSize(viewportWidth, viewportHeight);
+			particleSystem->resize( width_, height_, viewportWidth, viewportHeight );
 			numParticles = particleSystem->getNumParticles();
 			std::cout << "Particle system reinitialized with " << numParticles << " particle" << (numParticles > 1 ? "s" : "") << "." << std::endl;
 			width_ = 0;

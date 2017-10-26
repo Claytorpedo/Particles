@@ -74,6 +74,7 @@ int main (int argc, char* args[]) {
 	AmbientParticleSystem particleSystem( DEFAULT_PARTICLE_DIMENSIONS, glm::vec4(ORANGE, DEFAULT_ALPHA) );
 	Input input;
 	InputProcessor inputProcessor( &graphics, &camera );
+	units::Pixel windowWidth, windowHeight;
 
 	if ( !graphics.init() ) {
 		std::cerr << "Error: failed to initialize graphics!" << std::endl;
@@ -81,7 +82,8 @@ int main (int argc, char* args[]) {
 		close();
 		return 1;
 	}
-	if ( !particleSystem.init() ) {
+	graphics.getWindowSize(windowWidth, windowHeight);
+	if ( !particleSystem.init(windowWidth, windowHeight) ) {
 		std::cerr << "Error: Failed to initialize particle system!" << std::endl;
 		getchar();
 		close();
@@ -109,7 +111,8 @@ int main (int argc, char* args[]) {
 		elapsedTime = currentTime - previousTime;
 		elapsedTime = elapsedTime < MAX_FRAME_DUR ? elapsedTime : MAX_FRAME_DUR;
 		previousTime = currentTime;
-		particleSystem.update( elapsedTime, gravityObjs, activeGravObjs, cohesiveness );
+		graphics.getWindowSize(windowWidth, windowHeight);
+		particleSystem.update( elapsedTime, windowWidth, windowHeight, gravityObjs, activeGravObjs, cohesiveness );
 
 		// Draw the scene.
 		graphics.clear();

@@ -39,18 +39,17 @@ private:
 	void getShaderAttributes();
 	void createQuadBuffer();
 	void createUVBuffer();
-	void initParticleDrawing();
+	void initParticleDrawing(const units::Pixel viewportWidth, const units::Pixel viewportHeight);
 	void swapFramebuffers();
-	std::vector<GLint> setWindowForUpdate();
+	void setWindowForUpdate();
 public:
 	AmbientParticleSystem(unsigned int dimensions, glm::vec4 pointColour);
 	AmbientParticleSystem(unsigned int width, unsigned int height, glm::vec4 pointColour);
 	~AmbientParticleSystem();
 
-	bool init();
-	bool resize(unsigned int dimensions);
-	bool resize(unsigned int width, unsigned int height);
-	void update(const units::MS elapsedTime, const glm::vec4 gravityObjs[constants::MAX_GRAV_OBJECTS], 
+	bool init(const units::Pixel viewportWidth, const units::Pixel viewportHeight);
+	bool resize(unsigned int width, unsigned int height, const units::Pixel viewportWidth, const units::Pixel viewportHeight);
+	void update(const units::MS elapsedTime, const units::Pixel viewportWidth, const units::Pixel viewportHeight, const glm::vec4 gravityObjs[constants::MAX_GRAV_OBJECTS],
 			const unsigned int activeGravObjs[constants::MAX_GRAV_OBJECTS], const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
 	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
 	void togglePause() { is_paused_ = !is_paused_; }
