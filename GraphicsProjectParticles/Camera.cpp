@@ -8,17 +8,13 @@
 
 
 Camera::Camera(glm::vec3 origin, glm::vec3 position, glm::vec3 rotation, float FOV, float aspect, float near, float far,
-			   units::Pixel screenWidth, units::Pixel screenHeight) 
-			   : FOV_rads_(glm::radians(FOV)), aspect_(aspect), near_(near), far_(far), screen_width_(screenWidth), screen_height_(screenHeight),
-				origin_(origin), initial_position_(position), initial_rotation_(rotation), rotation_(rotation), position_(position) 
-{
+               units::Pixel screenWidth, units::Pixel screenHeight)
+               : screen_width_(screenWidth), screen_height_(screenHeight), FOV_rads_(glm::radians(FOV)), aspect_(aspect), near_(near), far_(far),
+                 origin_(origin), initial_position_(position), position_(position), initial_rotation_(rotation), rotation_(rotation) {
 	degrees_wide_ = screen_width_ / constants::SCREEN_DEGREES_WIDE;
 	degrees_tall_ = screen_height_ / constants::SCREEN_DEGREES_TALL;
-	
-	glm::mat4 rot = glm::rotate( glm::mat4(1.0f), initial_rotation_.x, glm::vec3(1.0f, 0.0f, 0.0f) );
-	rot = glm::rotate( rot, initial_rotation_.y, glm::vec3(0.0f, 1.0f, 0.0f) );
-	rot = glm::rotate( rot, initial_rotation_.z, glm::vec3(0.0f, 0.0f, 1.0f) );
-	view_ = glm::translate(glm::translate( glm::mat4(1.0f), initial_position_ ), origin_) * rot;
+
+	view_ = glm::translate(glm::translate( glm::mat4(1.0f), initial_position_ ), origin_) * glm::mat4_cast(rotation_);
 	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_ );
 	updateProjectionView();
 }
@@ -50,8 +46,7 @@ void Camera::resize( units::Pixel screenWidth, units::Pixel screenHeight ) {
 	updateProjectionView();
 }
 void Camera::rotate( float horizontalPixels, float verticalPixels) {
-	rotation_ = glm::fquat(glm::vec3(glm::radians(verticalPixels / degrees_tall_), 
-						glm::radians(horizontalPixels / degrees_wide_), 0.0f)) * rotation_;
+	rotation_ = glm::fquat(glm::vec3(glm::radians(verticalPixels / degrees_tall_), glm::radians(horizontalPixels / degrees_wide_), 0.0f)) * rotation_;
 	updateView();
 }
 void Camera::pan(float horizontalPixels, float verticalPixels) {
@@ -66,12 +61,9 @@ float Camera::getZoom() {
 	return position_.z;
 }
 void Camera::reset() {
-	rotation_ = glm::fquat(initial_rotation_);
+	rotation_ = initial_rotation_;
 	position_ = initial_position_;
-	glm::mat4 rot = glm::rotate( glm::mat4(1.0f), initial_rotation_.x, glm::vec3(1.0f, 0.0f, 0.0f) );
-	rot = glm::rotate( rot, initial_rotation_.y, glm::vec3(0.0f, 1.0f, 0.0f) );
-	rot = glm::rotate( rot, initial_rotation_.z, glm::vec3(0.0f, 0.0f, 1.0f) );
-	view_ = glm::translate(glm::translate( glm::mat4(1.0f), initial_position_ ), origin_) * rot;
+	view_ = glm::translate(glm::translate(glm::mat4(1.0f), initial_position_), origin_) * glm::mat4_cast(rotation_);
 	projection_ = glm::perspective( FOV_rads_, aspect_, near_, far_ );
 	updateProjectionView();
 }
@@ -108,4 +100,3 @@ Ray Camera::getRay(int x, int y) const {
 
 		return Ray(glm::vec3(origin), rayNorm);
 }
-
