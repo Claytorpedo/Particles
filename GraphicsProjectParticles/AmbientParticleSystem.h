@@ -13,6 +13,24 @@ class ShaderProgram;
 class Framebuffer;
 
 class AmbientParticleSystem {
+public:
+	AmbientParticleSystem(unsigned int dimensions, glm::vec4 pointColour);
+	AmbientParticleSystem(unsigned int width, unsigned int height, glm::vec4 pointColour);
+	~AmbientParticleSystem();
+
+	bool init(const units::Pixel viewportWidth, const units::Pixel viewportHeight);
+	bool resize(unsigned int width, unsigned int height, const units::Pixel viewportWidth, const units::Pixel viewportHeight);
+	void update(const units::MS elapsedTime, const units::Pixel viewportWidth, const units::Pixel viewportHeight, const glm::vec4 gravityObjs[constants::MAX_GRAV_OBJECTS],
+			const unsigned int activeGravObjs[constants::MAX_GRAV_OBJECTS], const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
+	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
+	void togglePause() { is_paused_ = !is_paused_; }
+	void setParticleColour(glm::vec4 colour);
+	void setParticleColourNoAlpha(glm::vec3 colour);
+	void setParticleAlpha(float alpha);
+	unsigned int getWidth() { return particle_texture_width_; }
+	unsigned int getHeight() { return particle_texture_height_; }
+	unsigned int getNumParticles() { return particle_texture_width_ * particle_texture_height_; }
+
 private:
 	bool is_paused_;
 	unsigned int particle_texture_width_, particle_texture_height_;
@@ -42,23 +60,6 @@ private:
 	void initParticleDrawing(const units::Pixel viewportWidth, const units::Pixel viewportHeight);
 	void swapFramebuffers();
 	void setWindowForUpdate();
-public:
-	AmbientParticleSystem(unsigned int dimensions, glm::vec4 pointColour);
-	AmbientParticleSystem(unsigned int width, unsigned int height, glm::vec4 pointColour);
-	~AmbientParticleSystem();
-
-	bool init(const units::Pixel viewportWidth, const units::Pixel viewportHeight);
-	bool resize(unsigned int width, unsigned int height, const units::Pixel viewportWidth, const units::Pixel viewportHeight);
-	void update(const units::MS elapsedTime, const units::Pixel viewportWidth, const units::Pixel viewportHeight, const glm::vec4 gravityObjs[constants::MAX_GRAV_OBJECTS],
-			const unsigned int activeGravObjs[constants::MAX_GRAV_OBJECTS], const unsigned int cohesiveness = constants::DEFAULT_COHESIVENESS);
-	void draw( const glm::mat4 &PVM, const unsigned int pointSize = 1 );
-	void togglePause() { is_paused_ = !is_paused_; }
-	void setParticleColour(glm::vec4 colour);
-	void setParticleColourNoAlpha(glm::vec3 colour);
-	void setParticleAlpha(float alpha);
-	unsigned int getWidth() { return particle_texture_width_; }
-	unsigned int getHeight() { return particle_texture_height_; }
-	unsigned int getNumParticles() { return particle_texture_width_ * particle_texture_height_; }
 };
 
 namespace ambient_particle_system {

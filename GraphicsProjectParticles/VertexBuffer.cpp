@@ -8,7 +8,7 @@ VertexBuffer::VertexBuffer(unsigned int vertex_size, unsigned int num_vertices, 
 	: vertexSize(vertex_size), numVertices(num_vertices), array_id_(0), buffer_id_(0) {
 		init( vertices );
 }
-VertexBuffer::VertexBuffer(unsigned int vertex_size, unsigned int num_vertices, const GLfloat vertices[] )
+VertexBuffer::VertexBuffer(unsigned int vertex_size, unsigned int num_vertices, const GLfloat *vertices )
 	: vertexSize(vertex_size), numVertices(num_vertices), array_id_(0), buffer_id_(0) {
 		std::vector<GLfloat> vert(vertices, vertices + vertexSize*numVertices);
 		init( vert );

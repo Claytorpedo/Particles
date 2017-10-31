@@ -8,9 +8,7 @@
 
 class ShaderProgram {
 public:
-	struct ShaderInfo {
-	private:
-		GLuint id_;
+	class ShaderInfo {
 	public:
 		const char* filePath;
 		const GLuint type;
@@ -20,6 +18,8 @@ public:
 		void setID(GLuint id) { id_ = id; }
 		GLuint getID() { return id_; }
 		void unload(const GLuint program);
+	private:
+		GLuint id_;
 	};
 
 	ShaderProgram(const char* vertex_file_path, const char* fragment_file_path, const char* geometry_file_path = 0);

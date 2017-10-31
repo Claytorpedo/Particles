@@ -12,19 +12,15 @@
 
 using namespace ambient_particle_system;
 
-AmbientParticleSystem::AmbientParticleSystem(unsigned int dimensions, glm::vec4 pointColour) :
-	particle_texture_width_(dimensions), particle_texture_height_(dimensions), colour_(pointColour),
-	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
-	init_shader_(0), update_shader_(0), draw_shader_(0)
-{
+AmbientParticleSystem::AmbientParticleSystem(unsigned int dimensions, glm::vec4 pointColour)
+    : is_paused_(false), particle_texture_width_(dimensions), particle_texture_height_(dimensions),
+      uv_buffer_(0), quad_buffer_(0), init_shader_(0), update_shader_(0), draw_shader_(0), colour_(pointColour) {
 	framebuffers_[0] = 0;
 	framebuffers_[1] = 0;
 }
-AmbientParticleSystem::AmbientParticleSystem(unsigned int width, unsigned int height, glm::vec4 pointColour) :
-	particle_texture_width_(width), particle_texture_height_(height), colour_(pointColour),
-	uv_buffer_(0), quad_buffer_(0), is_paused_(false),
-	init_shader_(0), update_shader_(0), draw_shader_(0)
-{
+AmbientParticleSystem::AmbientParticleSystem(unsigned int width, unsigned int height, glm::vec4 pointColour)
+    : is_paused_(false), particle_texture_width_(width), particle_texture_height_(height),
+      uv_buffer_(0), quad_buffer_(0), init_shader_(0), update_shader_(0), draw_shader_(0), colour_(pointColour) {
 	framebuffers_[0] = 0;
 	framebuffers_[1] = 0;
 }

@@ -7,13 +7,6 @@
 static const GLuint _MAX_COLOUR_ATTACH = 16;
 
 class Framebuffer {
-
-private:
-	GLuint fbo_;
-	std::vector<GLuint> textures_;
-	bool is_initialized_;
-
-	void genTexture(GLuint &tex);
 public:
 	const unsigned int width, height, numTextures;
 
@@ -34,6 +27,13 @@ public:
 	void readFrom();
 	void stopReading();
 	void printInfo();
+
+private:
+	GLuint fbo_;
+	std::vector<GLuint> textures_;
+	bool is_initialized_;
+
+	void genTexture(GLuint &tex);
 };
 
 

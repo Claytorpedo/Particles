@@ -6,11 +6,6 @@
 #include "GL/glew.h"
 
 class VertexBuffer {
-
-private:
-	GLuint array_id_, buffer_id_;
-
-	void init(std::vector<GLfloat> &vertices);
 public:
 	const unsigned int vertexSize;
 	const unsigned int numVertices;
@@ -21,6 +16,11 @@ public:
 
 	void bind();
 	void unbind();
+
+private:
+	GLuint array_id_, buffer_id_;
+
+	void init(std::vector<GLfloat> &vertices);
 };
 
 
