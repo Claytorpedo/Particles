@@ -6,7 +6,7 @@ A many-particle system using OpenGL-4 with SDL2. The particles are rendered and 
 
 Made for my Graphics 2 final project.
 
-#Controls
+# Controls
 
 The Essentials	
 ----
